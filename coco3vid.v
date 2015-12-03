@@ -1,0 +1,2397 @@
+////////////////////////////////////////////////////////////////////////////////
+// Project Name:	CoCo3FPGA Version 3.0
+// File Name:		coco3vid.v
+//
+// CoCo3 in an FPGA
+//
+// Revision: 3.0 08/15/15
+////////////////////////////////////////////////////////////////////////////////
+//
+// CPU section copyrighted by John Kent
+// The FDC co-processor copyrighted Daniel Wallner.
+//
+////////////////////////////////////////////////////////////////////////////////
+//
+// Color Computer 3 compatible system on a chip
+//
+// Version : 3.0
+//
+// Copyright (c) 2008 Gary Becker (gary_l_becker@yahoo.com)
+//
+// All rights reserved
+//
+// Redistribution and use in source and synthezised forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// Redistributions of source code must retain the above copyright notice,
+// this list of conditions and the following disclaimer.
+//
+// Redistributions in synthesized form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution.
+//
+// Neither the name of the author nor the names of other contributors may
+// be used to endorse or promote products derived from this software without
+// specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
+//
+// Please report bugs to the author, but before you do so, please
+// make sure that this is not a derivative work and that
+// you have the latest version of this file.
+//
+// The latest version of this file can be found at:
+//      http://groups.yahoo.com/group/CoCo3FPGA
+//
+// File history :
+//
+//  1.0		Full Release
+//  2.0		Partial Release
+//  3.0		Full Release
+////////////////////////////////////////////////////////////////////////////////
+// Gary Becker
+// gary_L_becker@yahoo.com
+////////////////////////////////////////////////////////////////////////////////
+
+module COCO3VIDEO(
+PIX_CLK,
+RESET_N,
+COLOR,
+HSYNC,
+SYNC_FLAG,
+VSYNC,
+HBLANKING,
+VBLANKING,
+RAM_ADDRESS,
+RAM_DATA,
+COCO,
+V,
+BP,
+VERT,
+VID_CONT,
+CSS,
+LPF,
+VERT_FIN_SCRL,
+HLPR,
+LPR,
+HRES,
+CRES,
+HVEN,
+HOR_OFFSET,
+SCRN_START_MSB,
+SCRN_START_LSB,
+BLINK,
+SWITCH5
+);
+
+input					PIX_CLK;
+input					RESET_N;
+output		[8:0]		COLOR;
+reg			[8:0]		COLOR;
+output				HSYNC;
+reg					HSYNC;
+output				SYNC_FLAG;
+reg					SYNC_FLAG;
+output				VSYNC;
+reg					VSYNC;
+output				HBLANKING;
+reg					HBLANKING;
+output				VBLANKING;
+reg					VBLANKING;
+output	[17:0]	RAM_ADDRESS;
+reg		[17:0]	RAM_ADDRESS;
+input		[15:0]	RAM_DATA;
+input					COCO;
+input		[2:0]		V;
+input					BP;
+input		[6:0]		VERT;
+input		[3:0]		VID_CONT;
+input					CSS;
+input		[1:0]		LPF;
+input					HLPR;
+input		[2:0]		LPR;
+input		[3:0]		VERT_FIN_SCRL;
+input		[3:0]		HRES;
+input		[1:0]		CRES;
+input					HVEN;
+input		[6:0]		HOR_OFFSET;
+input		[7:0]		SCRN_START_MSB;
+input		[7:0]		SCRN_START_LSB;
+input					BLINK;
+input					SWITCH5;
+reg		[9:0]		LINE;
+reg		[3:0]		VLPR;
+reg		[3:0]		COCO1_VLPR;
+reg		[9:0]		PIXEL_COUNT;
+reg		[15:0]	CHAR_LATCH_0;
+reg		[15:0]	CHAR_LATCH_1;
+reg		[15:0]	CHAR_LATCH_2;
+reg		[15:0]	CHAR_LATCH_3;
+`ifndef NEW_SRAM
+reg		[15:0]	CHAR_LATCH_4;
+reg		[15:0]	CHAR_LATCH_5;
+reg		[15:0]	CHAR_LATCH_6;
+reg		[15:0]	CHAR_LATCH_7;
+`endif
+wire		[3:0]		PIXEL_ORDER;
+reg		[7:0]		CHARACTER0;
+reg		[7:0]		CHARACTER1;
+reg		[7:0]		CHARACTER2;
+wire		[7:0]		CHARACTER3;
+wire		[7:0]		CHARACTER4;
+reg					UNDERLINE;
+wire					MODE_256;
+
+reg		[10:0]	ROM_ADDRESS;
+wire		[17:0]	RAM_ADDRESS_X;
+wire		[7:0]		ROM_DATA1;
+wire		[3:0]		LINES_ROW;
+reg		[3:0]		NUM_ROW;
+wire					SIX;
+reg					SIX_R;
+wire		[1:0]		SG6;
+reg		[2:0]		SG_LINES;
+wire		[4:0]		COCO3_VLPR;
+wire		[3:0]		PIXEL0;
+wire		[3:0]		PIXEL1;
+wire		[3:0]		PIXEL2;
+wire		[3:0]		PIXEL3;
+wire		[3:0]		PIXEL4;
+wire		[3:0]		PIXEL5;
+wire		[3:0]		PIXEL6;
+wire		[3:0]		PIXEL7;
+wire		[3:0]		PIXEL8;
+wire		[3:0]		PIXEL9;
+wire		[3:0]		PIXELA;
+wire		[3:0]		PIXELB;
+wire		[3:0]		PIXELC;
+wire		[3:0]		PIXELD;
+wire		[3:0]		PIXELE;
+wire		[3:0]		PIXELF;
+wire		[3:0]		PIXEL10;
+wire		[3:0]		PIXEL11;
+wire		[3:0]		PIXEL12;
+wire		[3:0]		PIXEL13;
+wire		[3:0]		PIXEL14;
+wire		[3:0]		PIXEL15;
+wire		[3:0]		PIXEL16;
+wire		[3:0]		PIXEL17;
+wire		[3:0]		PIXEL18;
+wire		[3:0]		PIXEL19;
+wire		[3:0]		PIXEL1A;
+wire		[3:0]		PIXEL1B;
+wire		[3:0]		PIXEL1C;
+wire		[3:0]		PIXEL1D;
+wire		[3:0]		PIXEL1E;
+wire		[3:0]		PIXEL1F;
+reg		[15:0]	COLOR0;
+reg		[15:0]	COLOR1;
+reg		[15:0]	COLOR2;
+reg		[15:0]	COLOR3;
+reg		[15:0]	COLOR4;
+reg		[15:0]	COLOR5;
+reg		[15:0]	COLOR6;
+reg		[15:0]	COLOR7;
+reg		[18:0]	ROW_ADD;
+wire		[8:0]		ROW_OFFSET;
+wire		[18:0]	SCREEN_OFF;
+reg					VBORDER;
+reg					HBORDER;
+wire		[8:0]		BORDER;
+wire		[8:0]		CCOLOR;
+wire					MODE6;
+
+parameter PALETTE0 = 4'h0;
+parameter PALETTE1 = 4'h1;
+parameter PALETTE2 = 4'h2;
+parameter PALETTE3 = 4'h3;
+parameter PALETTE4 = 4'h4;
+parameter PALETTE5 = 4'h5;
+parameter PALETTE6 = 4'h6;
+parameter PALETTE7 = 4'h7;
+parameter PALETTE8 = 4'h8;
+parameter PALETTE9 = 4'h9;
+parameter PALETTEA = 4'hA;
+parameter PALETTEB = 4'hB;
+parameter PALETTEC = 4'hC;
+parameter PALETTED = 4'hD;
+parameter PALETTEE = 4'hE;
+parameter PALETTEF = 4'hF;
+
+// Character generator
+COCO3GEN coco3gen(
+.address(ROM_ADDRESS[10:0]),
+.clock(PIX_CLK),
+.q(ROM_DATA1)
+);
+
+/*****************************************************************************
+* Read RAM
+******************************************************************************/
+assign RAM_ADDRESS_X = ROW_ADD[18:1] + ROW_OFFSET;
+
+assign ROW_OFFSET =																			//9 bits of two byte reads = 1024 max bytes
+// CoCo1 low res graphics (64 pixels / 2 bytes)
+({COCO,V[0]} == 2'b11)							?	{5'b00000, PIXEL_COUNT[9:6]}:	//16 bytes / line  Read 2 bytes every 64 pixels
+//	HR Text
+//({COCO,BP,HRES[2],CRES[0]}==4'b0000)		?	{4'b0000,  PIXEL_COUNT[9:5]}:	//32 / 40 characters / line  Read 2 bytes every 32 pixels
+({COCO,BP,HRES[2],CRES[0]}==4'b0001)		?	{3'b000,   PIXEL_COUNT[9:4]}:	//64 / 80 characters / line  Read 2 bytes every 16 pixels
+({COCO,BP,HRES[2],CRES[0]}==4'b0010)		?	{3'b000,   PIXEL_COUNT[9:4]}:	//64 / 80 characters / line  Read 2 bytes every 16 pixels
+({COCO,BP,HRES[2],CRES[0]}==4'b0011)		?	{2'b00,    PIXEL_COUNT[9:3]}:	//128/160 characters / line  Read 2 bytes every 8 pixels
+//	HR Graphics
+				({COCO,BP,HRES}==6'b010000)	?	{5'b00000, PIXEL_COUNT[9:6]}:	//16 bytes / line
+				({COCO,BP,HRES}==6'b010001)	?	{5'b00000, PIXEL_COUNT[9:6]}:	//20 bytes / line
+//				({COCO,BP,HRES}==6'b010010)	?	{4'b0000,  PIXEL_COUNT[9:5]}:	//32 bytes / line
+//				({COCO,BP,HRES}==6'b010011)	?	{4'b0000,  PIXEL_COUNT[9:5]}:	//40 bytes / line
+				({COCO,BP,HRES}==6'b010100)	?	{3'b000,   PIXEL_COUNT[9:4]}:	//64 bytes / line
+				({COCO,BP,HRES}==6'b010101)	?	{3'b000,   PIXEL_COUNT[9:4]}:	//80 bytes / line
+				({COCO,BP,HRES}==6'b010110)	?	{2'b00,    PIXEL_COUNT[9:3]}:	//128 bytes / line
+				({COCO,BP,HRES}==6'b010111)	?	{2'b00,    PIXEL_COUNT[9:3]}:	//160 bytes / line
+				({COCO,BP,HRES}==6'b011000)	?	{1'b0,     PIXEL_COUNT[9:2]}:	//256 bytes / line
+				({COCO,BP,HRES}==6'b011001)	?	{1'b0,     PIXEL_COUNT[9:2]}:	//320 bytes / line
+				({COCO,BP,HRES}==6'b011010)	?	           PIXEL_COUNT[9:1] :	//512 bytes / line
+				({COCO,BP,HRES}==6'b011011)	?	           PIXEL_COUNT[9:1] :	//640 bytes / line
+// CoCo1 Text and SEMIGRAPHICS
+															{4'b0000,  PIXEL_COUNT[9:5]};	//32 characters / line
+assign COCO3_VLPR = VLPR + 2'b11;
+`ifndef NEW_SRAM
+always @ (negedge PIX_CLK)
+begin
+		case (PIXEL_COUNT[3:0])
+		4'b0000:
+		begin
+			RAM_ADDRESS <= RAM_ADDRESS_X;
+			CHAR_LATCH_7 <= RAM_DATA[15:0];
+		end
+		4'b0010:
+		begin
+			RAM_ADDRESS <= RAM_ADDRESS + 1'b1;
+			if(({PIXEL_COUNT[5],PIXEL_COUNT[4]} !=2'b00)
+			&(({COCO,V[0]}==2'b11)											// CoCo1 16 byte / line mode
+         |({COCO,BP,HRES[3],HRES[2],HRES[1]}==5'b01000)))		// CoCo3 16/20 bytes/line
+			begin
+				CHAR_LATCH_0 <= {CHAR_LATCH_0[11:8],4'h0,CHAR_LATCH_0[3:0],CHAR_LATCH_0[15:12]}; // Rotate into position on 16/20 bytes/line
+			end
+			else
+			begin
+				if(PIXEL_COUNT[4]
+				&((COCO)															// All other CoCo1 modes
+				|({COCO,BP,HRES[3],HRES[2],HRES[1]}==5'b01001)))	//CoCo3 32/40 bytes/line ?????? might have to add text differences
+				begin
+					CHAR_LATCH_0 <= {8'h00,CHAR_LATCH_0[15:8]};
+				end
+				else
+				begin
+					CHAR_LATCH_0 <= RAM_DATA[15:0];					// Everything else
+				end
+			end
+		end
+		4'b0011:
+		begin
+			if(!COCO)
+				ROM_ADDRESS <=	{CHAR_LATCH_0[6:0],COCO3_VLPR[3:0]};								// COCO3 Text 1 (40 and 80)
+			else
+			begin
+				if({COCO,VID_CONT[0],CHAR_LATCH_0[6:5]} == 4'b1100)
+					ROM_ADDRESS <=	{2'b11,	CHAR_LATCH_0[4:0],	COCO1_VLPR};					// COCO1 Text 1 with LC
+				else
+					ROM_ADDRESS <=	{~CHAR_LATCH_0[5],	CHAR_LATCH_0[5:0],	COCO1_VLPR};				// COCO1 Text 1 w/o LC
+			end
+		end
+		4'b0100:
+		begin
+			RAM_ADDRESS <= RAM_ADDRESS + 1'b1;
+			CHAR_LATCH_1 <= RAM_DATA[15:0];
+		end
+		4'b0110:
+		begin
+			RAM_ADDRESS <= RAM_ADDRESS + 1'b1;
+			CHAR_LATCH_2 <= RAM_DATA[15:0];
+// Underline
+			if({COCO,CRES[0],CHAR_LATCH_0[14],UNDERLINE} == 4'b0111)				// Removed BP because we ignore characters during BP
+				CHARACTER0 <=	8'hFF;
+// Not Underline
+			else
+				CHARACTER0 <=	ROM_DATA1;
+			ROM_ADDRESS <=	{CHAR_LATCH_0[14:8],COCO3_VLPR[3:0]};								// COCO3 Text 1 (40 and 80)
+		end
+		4'b1000:
+		begin
+			RAM_ADDRESS <= RAM_ADDRESS + 1'b1;
+			CHAR_LATCH_3 <= RAM_DATA[15:0];
+		end
+		4'b1010:
+		begin
+			RAM_ADDRESS <= RAM_ADDRESS + 1'b1;
+			CHAR_LATCH_4 <= RAM_DATA[15:0];
+//XTEXT only, so no underline
+			CHARACTER1 <=	ROM_DATA1;
+			ROM_ADDRESS <=	{CHAR_LATCH_1[6:0],COCO3_VLPR[3:0]};								// COCO3 Text 1 (40 and 80)
+		end
+		4'b1100:
+		begin
+			RAM_ADDRESS <= RAM_ADDRESS + 1'b1;
+			CHAR_LATCH_5 <= RAM_DATA[15:0];			// last read from the previous series
+		end
+		4'b1110:
+		begin
+			RAM_ADDRESS <= RAM_ADDRESS + 1'b1;
+			CHAR_LATCH_6 <= RAM_DATA[15:0];			// First read of this series
+// Underline
+			if({COCO,BP,CRES[0],CHAR_LATCH_1[14],UNDERLINE} == 5'b00111)
+				CHARACTER2 <=	8'hFF;
+			else
+// Not Underline
+				CHARACTER2 <=	ROM_DATA1;
+		end
+		endcase
+end
+`else
+always @ (negedge PIX_CLK)
+begin
+		case (PIXEL_COUNT[3:0])
+		4'b0000:
+		begin
+			RAM_ADDRESS <= RAM_ADDRESS_X;
+			CHAR_LATCH_3 <= RAM_DATA[15:0];
+		end
+		4'b0100:
+		begin
+			RAM_ADDRESS <= RAM_ADDRESS + 1'b1;
+			if(({PIXEL_COUNT[5],PIXEL_COUNT[4]} !=2'b00)
+			&(({COCO,V[0]}==2'b11)											// CoCo1 16 byte / line mode
+         |({COCO,BP,HRES[3],HRES[2],HRES[1]}==5'b01000)))		// CoCo3 16/20 bytes/line
+			begin
+				CHAR_LATCH_0 <= {CHAR_LATCH_0[11:8],4'h0,CHAR_LATCH_0[3:0],CHAR_LATCH_0[15:12]}; // Rotate into position on 16/20 bytes/line
+			end
+			else
+			begin
+				if(PIXEL_COUNT[4]
+				&((COCO)															// All other CoCo1 modes
+				|({COCO,BP,HRES[3],HRES[2],HRES[1]}==5'b01001)))	//CoCo3 32/40 bytes/line ?????? might have to add text differences
+				begin
+					CHAR_LATCH_0 <= {8'h00,CHAR_LATCH_0[15:8]};
+				end
+				else
+				begin
+					CHAR_LATCH_0 <= RAM_DATA[15:0];					// Everything else
+				end
+			end
+		end
+		4'b0101:
+		begin
+			if(!COCO)
+				ROM_ADDRESS <=	{CHAR_LATCH_0[6:0],COCO3_VLPR[3:0]};								// COCO3 Text 1 (40 and 80)
+			else
+			begin
+				if({COCO,VID_CONT[0],CHAR_LATCH_0[6:5]} == 4'b1100)
+					ROM_ADDRESS <=	{2'b11,	CHAR_LATCH_0[4:0],	COCO1_VLPR};					// COCO1 Text 1 with LC
+				else
+					ROM_ADDRESS <=	{~CHAR_LATCH_0[5],	CHAR_LATCH_0[5:0],	COCO1_VLPR};				// COCO1 Text 1 w/o LC
+			end
+		end
+		4'b1000:
+		begin
+			RAM_ADDRESS <= RAM_ADDRESS + 1'b1;
+			CHAR_LATCH_1 <= RAM_DATA[15:0];
+// Underline
+			if({COCO,CRES[0],CHAR_LATCH_0[14],UNDERLINE} == 4'b0111)				// Removed BP because we ignore characters during BP
+				CHARACTER0 <=	8'hFF;
+// Not Underline
+			else
+				CHARACTER0 <=	ROM_DATA1;
+			ROM_ADDRESS <=	{CHAR_LATCH_0[14:8],COCO3_VLPR[3:0]};								// COCO3 Text 1 (40 and 80)
+		end
+		4'b1010:
+		begin
+//XTEXT only, so no underline
+			CHARACTER1 <=	ROM_DATA1;
+			ROM_ADDRESS <=	{CHAR_LATCH_1[6:0],COCO3_VLPR[3:0]};								// COCO3 Text 1 (40 and 80)
+		end
+		4'b1100:
+		begin
+			RAM_ADDRESS <= RAM_ADDRESS + 1'b1;
+			CHAR_LATCH_2 <= RAM_DATA[15:0];
+			if({COCO,BP,CRES[0],CHAR_LATCH_1[14],UNDERLINE} == 5'b00111)
+				CHARACTER2 <=	8'hFF;
+			else
+// Not Underline
+				CHARACTER2 <=	ROM_DATA1;
+		end
+		endcase
+end
+`endif
+/*****************************************************************************
+* Read Character ROM
+******************************************************************************/
+assign CHARACTER3 =	({COCO,BP,CRES[0],CHAR_LATCH_0[15],BLINK} == 5'b00111)	?	8'h00:				// Hires Text blink
+							({COCO, VID_CONT[1:0], CHAR_LATCH_0[6:5]} == 5'b10000)	?	~CHARACTER0:		// Lowres  0-31 Normal UC only (Inverse)
+							({COCO, VID_CONT[1:0], CHAR_LATCH_0[6:5]} == 5'b10001)	?	~CHARACTER0:		// Lowres 32-64 Normal UC only (Inverse)
+							({COCO, VID_CONT[1:0], CHAR_LATCH_0[6:5]} == 5'b10101)	?	~CHARACTER0:		// Lowres 32-64 LC but UC part (Inverse)
+							({COCO, VID_CONT[1:0], CHAR_LATCH_0[6:5]} == 5'b11010)	?	~CHARACTER0:		// Lowres 64-95 Inverse
+							({COCO, VID_CONT[1:0], CHAR_LATCH_0[6:5]} == 5'b11011)	?	~CHARACTER0:		// Lowres 96-128 Inverse
+							({COCO, VID_CONT[1:0], CHAR_LATCH_0[6:5]} == 5'b11100)	?	~CHARACTER0:		// Lowres  0-31 Inverse
+							({COCO, VID_CONT[1:0], CHAR_LATCH_0[6:5]} == 5'b11110)	?	~CHARACTER0:		// Lowres 64-95 Inverse
+							({COCO, VID_CONT[1:0], CHAR_LATCH_0[6:5]} == 5'b11111)	?	~CHARACTER0:		// Lowres 96-128 Inverse
+																											 CHARACTER0;		// Normal Video
+
+assign CHARACTER4 =	({COCO,BP,CRES[0],CHAR_LATCH_1[15],BLINK} == 5'b00111)	?	8'h00:				// Hires Text blink
+																											 CHARACTER2;		// Normal Video
+
+assign MODE6 = ~VID_CONT[0]				?	1'b0:
+					(V != 3'b000)				?	1'b0:
+					~SWITCH5						?	1'b0:
+														1'b1;
+
+assign PIXEL0 =
+//CoCo1 Text
+			({COCO,VID_CONT[3],CSS,CHAR_LATCH_0[7],CHARACTER3[7]} == 5'b10001)			?	PALETTEC:
+			({COCO,VID_CONT[3],CSS,CHAR_LATCH_0[7],CHARACTER3[7]} == 5'b10000)			?	PALETTED:
+			({COCO,VID_CONT[3],CSS,CHAR_LATCH_0[7],CHARACTER3[7]} == 5'b10101)			?	PALETTEE:
+			({COCO,VID_CONT[3],CSS,CHAR_LATCH_0[7],CHARACTER3[7]} == 5'b10100)			?	PALETTEF:
+//HR Text
+			({COCO,BP,CRES[0],CHARACTER3[7],CHAR_LATCH_0[13:11]}==7'b0011000)	?	PALETTE8:
+			({COCO,BP,CRES[0],CHARACTER3[7],CHAR_LATCH_0[13:11]}==7'b0011001)	?	PALETTE9:
+			({COCO,BP,CRES[0],CHARACTER3[7],CHAR_LATCH_0[13:11]}==7'b0011010)	?	PALETTEA:
+			({COCO,BP,CRES[0],CHARACTER3[7],CHAR_LATCH_0[13:11]}==7'b0011011)	?	PALETTEB:
+			({COCO,BP,CRES[0],CHARACTER3[7],CHAR_LATCH_0[13:11]}==7'b0011100)	?	PALETTEC:
+			({COCO,BP,CRES[0],CHARACTER3[7],CHAR_LATCH_0[13:11]}==7'b0011101)	?	PALETTED:
+			({COCO,BP,CRES[0],CHARACTER3[7],CHAR_LATCH_0[13:11]}==7'b0011110)	?	PALETTEE:
+			({COCO,BP,CRES[0],CHARACTER3[7],CHAR_LATCH_0[13:11]}==7'b0011111)	?	PALETTEF:
+			({COCO,BP,CRES[0],CHARACTER3[7],CHAR_LATCH_0[10:8]}==7'b0010000)	?	PALETTE0:
+			({COCO,BP,CRES[0],CHARACTER3[7],CHAR_LATCH_0[10:8]}==7'b0010001)	?	PALETTE1:
+			({COCO,BP,CRES[0],CHARACTER3[7],CHAR_LATCH_0[10:8]}==7'b0010010)	?	PALETTE2:
+			({COCO,BP,CRES[0],CHARACTER3[7],CHAR_LATCH_0[10:8]}==7'b0010011)	?	PALETTE3:
+			({COCO,BP,CRES[0],CHARACTER3[7],CHAR_LATCH_0[10:8]}==7'b0010100)	?	PALETTE4:
+			({COCO,BP,CRES[0],CHARACTER3[7],CHAR_LATCH_0[10:8]}==7'b0010101)	?	PALETTE5:
+			({COCO,BP,CRES[0],CHARACTER3[7],CHAR_LATCH_0[10:8]}==7'b0010110)	?	PALETTE6:
+			({COCO,BP,CRES[0],CHARACTER3[7],CHAR_LATCH_0[10:8]}==7'b0010111)	?	PALETTE7:
+//XTEXT
+			({COCO,BP,CRES[0],CHARACTER3[7]}==4'b0001)							?	PALETTEC:
+			({COCO,BP,CRES[0],CHARACTER3[7]}==4'b0000)							?	PALETTED:
+//SG4, SG8, SG12, SG24
+			({COCO,VID_CONT[3],MODE6,CHAR_LATCH_0[7],  SIX,CHAR_LATCH_0[1]} == 6'b100110)			?	PALETTE8:
+			({COCO,VID_CONT[3],MODE6,CHAR_LATCH_0[7:4],SIX,CHAR_LATCH_0[1]} == 9'b100100011)		?	PALETTE0:
+			({COCO,VID_CONT[3],MODE6,CHAR_LATCH_0[7:4],SIX,CHAR_LATCH_0[1]} == 9'b100100111)		?	PALETTE1:
+			({COCO,VID_CONT[3],MODE6,CHAR_LATCH_0[7:4],SIX,CHAR_LATCH_0[1]} == 9'b100101011)		?	PALETTE2:
+			({COCO,VID_CONT[3],MODE6,CHAR_LATCH_0[7:4],SIX,CHAR_LATCH_0[1]} == 9'b100101111)		?	PALETTE3:
+			({COCO,VID_CONT[3],MODE6,CHAR_LATCH_0[7:4],SIX,CHAR_LATCH_0[1]} == 9'b100110011)		?	PALETTE4:
+			({COCO,VID_CONT[3],MODE6,CHAR_LATCH_0[7:4],SIX,CHAR_LATCH_0[1]} == 9'b100110111)		?	PALETTE5:
+			({COCO,VID_CONT[3],MODE6,CHAR_LATCH_0[7:4],SIX,CHAR_LATCH_0[1]} == 9'b100111011)		?	PALETTE6:
+			({COCO,VID_CONT[3],MODE6,CHAR_LATCH_0[7:4],SIX,CHAR_LATCH_0[1]} == 9'b100111111)		?	PALETTE7:
+			({COCO,VID_CONT[3],MODE6,CHAR_LATCH_0[7],	 SIX,CHAR_LATCH_0[3]} == 6'b100100)			?	PALETTE8:
+			({COCO,VID_CONT[3],MODE6,CHAR_LATCH_0[7:4],SIX,CHAR_LATCH_0[3]} == 9'b100100001)		?	PALETTE0:
+			({COCO,VID_CONT[3],MODE6,CHAR_LATCH_0[7:4],SIX,CHAR_LATCH_0[3]} == 9'b100100101)		?	PALETTE1:
+			({COCO,VID_CONT[3],MODE6,CHAR_LATCH_0[7:4],SIX,CHAR_LATCH_0[3]} == 9'b100101001)		?	PALETTE2:
+			({COCO,VID_CONT[3],MODE6,CHAR_LATCH_0[7:4],SIX,CHAR_LATCH_0[3]} == 9'b100101101)		?	PALETTE3:
+			({COCO,VID_CONT[3],MODE6,CHAR_LATCH_0[7:4],SIX,CHAR_LATCH_0[3]} == 9'b100110001)		?	PALETTE4:
+			({COCO,VID_CONT[3],MODE6,CHAR_LATCH_0[7:4],SIX,CHAR_LATCH_0[3]} == 9'b100110101)		?	PALETTE5:
+			({COCO,VID_CONT[3],MODE6,CHAR_LATCH_0[7:4],SIX,CHAR_LATCH_0[3]} == 9'b100111001)		?	PALETTE6:
+			({COCO,VID_CONT[3],MODE6,CHAR_LATCH_0[7:4],SIX,CHAR_LATCH_0[3]} == 9'b100111101)		?	PALETTE7:
+//SG6
+			({COCO,VID_CONT[3],MODE6,    CHAR_LATCH_0[7],  SG6,CHAR_LATCH_0[1]} == 7'b1010100)		?	PALETTE8:
+			({COCO,VID_CONT[3],MODE6,CSS,CHAR_LATCH_0[7:6],SG6,CHAR_LATCH_0[1]} == 9'b101010101)	?	PALETTE2:
+			({COCO,VID_CONT[3],MODE6,CSS,CHAR_LATCH_0[7:6],SG6,CHAR_LATCH_0[1]} == 9'b101011101)	?	PALETTE3:
+			({COCO,VID_CONT[3],MODE6,CSS,CHAR_LATCH_0[7:6],SG6,CHAR_LATCH_0[1]} == 9'b101110101)	?	PALETTE6:
+			({COCO,VID_CONT[3],MODE6,CSS,CHAR_LATCH_0[7:6],SG6,CHAR_LATCH_0[1]} == 9'b101111101)	?	PALETTE7:
+			({COCO,VID_CONT[3],MODE6,    CHAR_LATCH_0[7],  SG6,CHAR_LATCH_0[3]} == 7'b1010010)		?	PALETTE8:
+			({COCO,VID_CONT[3],MODE6,CSS,CHAR_LATCH_0[7:6],SG6,CHAR_LATCH_0[3]} == 9'b101010011)	?	PALETTE2:
+			({COCO,VID_CONT[3],MODE6,CSS,CHAR_LATCH_0[7:6],SG6,CHAR_LATCH_0[3]} == 9'b101011011)	?	PALETTE3:
+			({COCO,VID_CONT[3],MODE6,CSS,CHAR_LATCH_0[7:6],SG6,CHAR_LATCH_0[3]} == 9'b101110011)	?	PALETTE6:
+			({COCO,VID_CONT[3],MODE6,CSS,CHAR_LATCH_0[7:6],SG6,CHAR_LATCH_0[3]} == 9'b101111011)	?	PALETTE7:
+			({COCO,VID_CONT[3],MODE6,    CHAR_LATCH_0[7],  SG6,CHAR_LATCH_0[5]} == 7'b1010000)		?	PALETTE8:
+			({COCO,VID_CONT[3],MODE6,CSS,CHAR_LATCH_0[7:6],SG6,CHAR_LATCH_0[5]} == 9'b101010001)	?	PALETTE2:
+			({COCO,VID_CONT[3],MODE6,CSS,CHAR_LATCH_0[7:6],SG6,CHAR_LATCH_0[5]} == 9'b101011001)	?	PALETTE3:
+			({COCO,VID_CONT[3],MODE6,CSS,CHAR_LATCH_0[7:6],SG6,CHAR_LATCH_0[5]} == 9'b101110001)	?	PALETTE6:
+			({COCO,VID_CONT[3],MODE6,CSS,CHAR_LATCH_0[7:6],SG6,CHAR_LATCH_0[5]} == 9'b101111001)	?	PALETTE7:
+//Lowres graphics
+//2 color
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[7]} == 5'b11100)		?	PALETTE8:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[7]} == 5'b11101)		?	PALETTE9:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[7]} == 5'b11110)		?	PALETTEA:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[7]} == 5'b11111)		?	PALETTEB:
+//4 color
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[7:6]} == 6'b110000)	?	PALETTE0:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[7:6]} == 6'b110001)	?	PALETTE1:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[7:6]} == 6'b110010)	?	PALETTE2:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[7:6]} == 6'b110011)	?	PALETTE3:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[7:6]} == 6'b110100)	?	PALETTE4:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[7:6]} == 6'b110101)	?	PALETTE5:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[7:6]} == 6'b110110)	?	PALETTE6:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[7:6]} == 6'b110111)	?	PALETTE7:
+// Hires GR
+//2 color
+			({COCO,BP,CRES,CHAR_LATCH_0[7]} == 5'b01000)							?	PALETTE0:
+			({COCO,BP,CRES,CHAR_LATCH_0[7]} == 5'b01001)							?	PALETTE1:
+//4 Color
+			({COCO,BP,CRES,CHAR_LATCH_0[7:6]} == 6'b010100)						?	PALETTE0:
+			({COCO,BP,CRES,CHAR_LATCH_0[7:6]} == 6'b010101)						?	PALETTE1:
+			({COCO,BP,CRES,CHAR_LATCH_0[7:6]} == 6'b010110)						?	PALETTE2:
+			({COCO,BP,CRES,CHAR_LATCH_0[7:6]} == 6'b010111)						?	PALETTE3:
+// 16 color
+			({COCO,BP,CRES,CHAR_LATCH_0[7:4]} == 8'b01100000)						?	PALETTE0:
+			({COCO,BP,CRES,CHAR_LATCH_0[7:4]} == 8'b01100001)						?	PALETTE1:
+			({COCO,BP,CRES,CHAR_LATCH_0[7:4]} == 8'b01100010)						?	PALETTE2:
+			({COCO,BP,CRES,CHAR_LATCH_0[7:4]} == 8'b01100011)						?	PALETTE3:
+			({COCO,BP,CRES,CHAR_LATCH_0[7:4]} == 8'b01100100)						?	PALETTE4:
+			({COCO,BP,CRES,CHAR_LATCH_0[7:4]} == 8'b01100101)						?	PALETTE5:
+			({COCO,BP,CRES,CHAR_LATCH_0[7:4]} == 8'b01100110)						?	PALETTE6:
+			({COCO,BP,CRES,CHAR_LATCH_0[7:4]} == 8'b01100111)						?	PALETTE7:
+			({COCO,BP,CRES,CHAR_LATCH_0[7:4]} == 8'b01101000)						?	PALETTE8:
+			({COCO,BP,CRES,CHAR_LATCH_0[7:4]} == 8'b01101001)						?	PALETTE9:
+			({COCO,BP,CRES,CHAR_LATCH_0[7:4]} == 8'b01101010)						?	PALETTEA:
+			({COCO,BP,CRES,CHAR_LATCH_0[7:4]} == 8'b01101011)						?	PALETTEB:
+			({COCO,BP,CRES,CHAR_LATCH_0[7:4]} == 8'b01101100)						?	PALETTEC:
+			({COCO,BP,CRES,CHAR_LATCH_0[7:4]} == 8'b01101101)						?	PALETTED:
+			({COCO,BP,CRES,CHAR_LATCH_0[7:4]} == 8'b01101110)						?	PALETTEE:
+			({COCO,BP,CRES,CHAR_LATCH_0[7:4]} == 8'b01101111)						?	PALETTEF:
+// 256 color mode
+			({COCO,BP,CRES} == 4'b0111)													?	CHAR_LATCH_0[3:0]:
+																										PALETTE8;
+
+assign PIXEL10 =
+			({COCO,BP,CRES} == 4'b0111)												?	CHAR_LATCH_0[7:4]:
+																									4'h0;
+
+assign PIXEL1 =
+//CoCo1 Text
+			({COCO,VID_CONT[3],CSS,CHAR_LATCH_0[7],CHARACTER3[6]} == 5'b10001)			?	PALETTEC:
+			({COCO,VID_CONT[3],CSS,CHAR_LATCH_0[7],CHARACTER3[6]} == 5'b10000)			?	PALETTED:
+			({COCO,VID_CONT[3],CSS,CHAR_LATCH_0[7],CHARACTER3[6]} == 5'b10101)			?	PALETTEE:
+			({COCO,VID_CONT[3],CSS,CHAR_LATCH_0[7],CHARACTER3[6]} == 5'b10100)			?	PALETTEF:
+// HR Text
+			({COCO,BP,CRES[0],CHARACTER3[6],CHAR_LATCH_0[13:11]}==7'b0011000)	?	PALETTE8:
+			({COCO,BP,CRES[0],CHARACTER3[6],CHAR_LATCH_0[13:11]}==7'b0011001)	?	PALETTE9:
+			({COCO,BP,CRES[0],CHARACTER3[6],CHAR_LATCH_0[13:11]}==7'b0011010)	?	PALETTEA:
+			({COCO,BP,CRES[0],CHARACTER3[6],CHAR_LATCH_0[13:11]}==7'b0011011)	?	PALETTEB:
+			({COCO,BP,CRES[0],CHARACTER3[6],CHAR_LATCH_0[13:11]}==7'b0011100)	?	PALETTEC:
+			({COCO,BP,CRES[0],CHARACTER3[6],CHAR_LATCH_0[13:11]}==7'b0011101)	?	PALETTED:
+			({COCO,BP,CRES[0],CHARACTER3[6],CHAR_LATCH_0[13:11]}==7'b0011110)	?	PALETTEE:
+			({COCO,BP,CRES[0],CHARACTER3[6],CHAR_LATCH_0[13:11]}==7'b0011111)	?	PALETTEF:
+			({COCO,BP,CRES[0],CHARACTER3[6],CHAR_LATCH_0[10:8]}==7'b0010000)	?	PALETTE0:
+			({COCO,BP,CRES[0],CHARACTER3[6],CHAR_LATCH_0[10:8]}==7'b0010001)	?	PALETTE1:
+			({COCO,BP,CRES[0],CHARACTER3[6],CHAR_LATCH_0[10:8]}==7'b0010010)	?	PALETTE2:
+			({COCO,BP,CRES[0],CHARACTER3[6],CHAR_LATCH_0[10:8]}==7'b0010011)	?	PALETTE3:
+			({COCO,BP,CRES[0],CHARACTER3[6],CHAR_LATCH_0[10:8]}==7'b0010100)	?	PALETTE4:
+			({COCO,BP,CRES[0],CHARACTER3[6],CHAR_LATCH_0[10:8]}==7'b0010101)	?	PALETTE5:
+			({COCO,BP,CRES[0],CHARACTER3[6],CHAR_LATCH_0[10:8]}==7'b0010110)	?	PALETTE6:
+			({COCO,BP,CRES[0],CHARACTER3[6],CHAR_LATCH_0[10:8]}==7'b0010111)	?	PALETTE7:
+// XTEXT
+			({COCO,BP,CRES[0],CHARACTER3[6]}==4'b0001)							?	PALETTEC:
+			({COCO,BP,CRES[0],CHARACTER3[6]}==4'b0000)							?	PALETTED:
+//SG4, SG8, SG12, SG24
+			({COCO,VID_CONT[3],MODE6,CHAR_LATCH_0[7],  SIX,CHAR_LATCH_0[0]} == 6'b100110)			?	PALETTE8:
+			({COCO,VID_CONT[3],MODE6,CHAR_LATCH_0[7:4],SIX,CHAR_LATCH_0[0]} == 9'b100100011)		?	PALETTE0:
+			({COCO,VID_CONT[3],MODE6,CHAR_LATCH_0[7:4],SIX,CHAR_LATCH_0[0]} == 9'b100100111)		?	PALETTE1:
+			({COCO,VID_CONT[3],MODE6,CHAR_LATCH_0[7:4],SIX,CHAR_LATCH_0[0]} == 9'b100101011)		?	PALETTE2:
+			({COCO,VID_CONT[3],MODE6,CHAR_LATCH_0[7:4],SIX,CHAR_LATCH_0[0]} == 9'b100101111)		?	PALETTE3:
+			({COCO,VID_CONT[3],MODE6,CHAR_LATCH_0[7:4],SIX,CHAR_LATCH_0[0]} == 9'b100110011)		?	PALETTE4:
+			({COCO,VID_CONT[3],MODE6,CHAR_LATCH_0[7:4],SIX,CHAR_LATCH_0[0]} == 9'b100110111)		?	PALETTE5:
+			({COCO,VID_CONT[3],MODE6,CHAR_LATCH_0[7:4],SIX,CHAR_LATCH_0[0]} == 9'b100111011)		?	PALETTE6:
+			({COCO,VID_CONT[3],MODE6,CHAR_LATCH_0[7:4],SIX,CHAR_LATCH_0[0]} == 9'b100111111)		?	PALETTE7:
+			({COCO,VID_CONT[3],MODE6,CHAR_LATCH_0[7],	 SIX,CHAR_LATCH_0[2]} == 6'b100100)			?	PALETTE8:
+			({COCO,VID_CONT[3],MODE6,CHAR_LATCH_0[7:4],SIX,CHAR_LATCH_0[2]} == 9'b100100001)		?	PALETTE0:
+			({COCO,VID_CONT[3],MODE6,CHAR_LATCH_0[7:4],SIX,CHAR_LATCH_0[2]} == 9'b100100101)		?	PALETTE1:
+			({COCO,VID_CONT[3],MODE6,CHAR_LATCH_0[7:4],SIX,CHAR_LATCH_0[2]} == 9'b100101001)		?	PALETTE2:
+			({COCO,VID_CONT[3],MODE6,CHAR_LATCH_0[7:4],SIX,CHAR_LATCH_0[2]} == 9'b100101101)		?	PALETTE3:
+			({COCO,VID_CONT[3],MODE6,CHAR_LATCH_0[7:4],SIX,CHAR_LATCH_0[2]} == 9'b100110001)		?	PALETTE4:
+			({COCO,VID_CONT[3],MODE6,CHAR_LATCH_0[7:4],SIX,CHAR_LATCH_0[2]} == 9'b100110101)		?	PALETTE5:
+			({COCO,VID_CONT[3],MODE6,CHAR_LATCH_0[7:4],SIX,CHAR_LATCH_0[2]} == 9'b100111001)		?	PALETTE6:
+			({COCO,VID_CONT[3],MODE6,CHAR_LATCH_0[7:4],SIX,CHAR_LATCH_0[2]} == 9'b100111101)		?	PALETTE7:
+//SG6
+			({COCO,VID_CONT[3],MODE6,    CHAR_LATCH_0[7],  SG6,CHAR_LATCH_0[0]} == 7'b1010100)		?	PALETTE8:
+			({COCO,VID_CONT[3],MODE6,CSS,CHAR_LATCH_0[7:6],SG6,CHAR_LATCH_0[0]} == 9'b101010101)	?	PALETTE2:
+			({COCO,VID_CONT[3],MODE6,CSS,CHAR_LATCH_0[7:6],SG6,CHAR_LATCH_0[0]} == 9'b101011101)	?	PALETTE3:
+			({COCO,VID_CONT[3],MODE6,CSS,CHAR_LATCH_0[7:6],SG6,CHAR_LATCH_0[0]} == 9'b101110101)	?	PALETTE6:
+			({COCO,VID_CONT[3],MODE6,CSS,CHAR_LATCH_0[7:6],SG6,CHAR_LATCH_0[0]} == 9'b101111101)	?	PALETTE7:
+			({COCO,VID_CONT[3],MODE6,    CHAR_LATCH_0[7],  SG6,CHAR_LATCH_0[2]} == 7'b1010010)		?	PALETTE8:
+			({COCO,VID_CONT[3],MODE6,CSS,CHAR_LATCH_0[7:6],SG6,CHAR_LATCH_0[2]} == 9'b101010011)	?	PALETTE2:
+			({COCO,VID_CONT[3],MODE6,CSS,CHAR_LATCH_0[7:6],SG6,CHAR_LATCH_0[2]} == 9'b101011011)	?	PALETTE3:
+			({COCO,VID_CONT[3],MODE6,CSS,CHAR_LATCH_0[7:6],SG6,CHAR_LATCH_0[2]} == 9'b101110011)	?	PALETTE6:
+			({COCO,VID_CONT[3],MODE6,CSS,CHAR_LATCH_0[7:6],SG6,CHAR_LATCH_0[2]} == 9'b101111011)	?	PALETTE7:
+			({COCO,VID_CONT[3],MODE6,    CHAR_LATCH_0[7],  SG6,CHAR_LATCH_0[4]} == 7'b1010000)		?	PALETTE8:
+			({COCO,VID_CONT[3],MODE6,CSS,CHAR_LATCH_0[7:6],SG6,CHAR_LATCH_0[4]} == 9'b101010001)	?	PALETTE2:
+			({COCO,VID_CONT[3],MODE6,CSS,CHAR_LATCH_0[7:6],SG6,CHAR_LATCH_0[4]} == 9'b101011001)	?	PALETTE3:
+			({COCO,VID_CONT[3],MODE6,CSS,CHAR_LATCH_0[7:6],SG6,CHAR_LATCH_0[4]} == 9'b101110001)	?	PALETTE6:
+			({COCO,VID_CONT[3],MODE6,CSS,CHAR_LATCH_0[7:6],SG6,CHAR_LATCH_0[4]} == 9'b101111001)	?	PALETTE7:
+// Lowres graphics
+// 2 color
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[6]} == 5'b11100)		?	PALETTE8:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[6]} == 5'b11101)		?	PALETTE9:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[6]} == 5'b11110)		?	PALETTEA:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[6]} == 5'b11111)		?	PALETTEB:
+// 4 color
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[5:4]} == 6'b110000)	?	PALETTE0:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[5:4]} == 6'b110001)	?	PALETTE1:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[5:4]} == 6'b110010)	?	PALETTE2:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[5:4]} == 6'b110011)	?	PALETTE3:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[5:4]} == 6'b110100)	?	PALETTE4:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[5:4]} == 6'b110101)	?	PALETTE5:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[5:4]} == 6'b110110)	?	PALETTE6:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[5:4]} == 6'b110111)	?	PALETTE7:
+// Hires GR
+// 2 color
+			({COCO,BP,CRES,CHAR_LATCH_0[6]} == 5'b01000)							?	PALETTE0:
+			({COCO,BP,CRES,CHAR_LATCH_0[6]} == 5'b01001)							?	PALETTE1:
+// 4 Color
+			({COCO,BP,CRES,CHAR_LATCH_0[5:4]} == 6'b010100)						?	PALETTE0:
+			({COCO,BP,CRES,CHAR_LATCH_0[5:4]} == 6'b010101)						?	PALETTE1:
+			({COCO,BP,CRES,CHAR_LATCH_0[5:4]} == 6'b010110)						?	PALETTE2:
+			({COCO,BP,CRES,CHAR_LATCH_0[5:4]} == 6'b010111)						?	PALETTE3:
+// 16 color
+			({COCO,BP,CRES,CHAR_LATCH_0[3:0]} == 8'b01100000)						?	PALETTE0:
+			({COCO,BP,CRES,CHAR_LATCH_0[3:0]} == 8'b01100001)						?	PALETTE1:
+			({COCO,BP,CRES,CHAR_LATCH_0[3:0]} == 8'b01100010)						?	PALETTE2:
+			({COCO,BP,CRES,CHAR_LATCH_0[3:0]} == 8'b01100011)						?	PALETTE3:
+			({COCO,BP,CRES,CHAR_LATCH_0[3:0]} == 8'b01100100)						?	PALETTE4:
+			({COCO,BP,CRES,CHAR_LATCH_0[3:0]} == 8'b01100101)						?	PALETTE5:
+			({COCO,BP,CRES,CHAR_LATCH_0[3:0]} == 8'b01100110)						?	PALETTE6:
+			({COCO,BP,CRES,CHAR_LATCH_0[3:0]} == 8'b01100111)						?	PALETTE7:
+			({COCO,BP,CRES,CHAR_LATCH_0[3:0]} == 8'b01101000)						?	PALETTE8:
+			({COCO,BP,CRES,CHAR_LATCH_0[3:0]} == 8'b01101001)						?	PALETTE9:
+			({COCO,BP,CRES,CHAR_LATCH_0[3:0]} == 8'b01101010)						?	PALETTEA:
+			({COCO,BP,CRES,CHAR_LATCH_0[3:0]} == 8'b01101011)						?	PALETTEB:
+			({COCO,BP,CRES,CHAR_LATCH_0[3:0]} == 8'b01101100)						?	PALETTEC:
+			({COCO,BP,CRES,CHAR_LATCH_0[3:0]} == 8'b01101101)						?	PALETTED:
+			({COCO,BP,CRES,CHAR_LATCH_0[3:0]} == 8'b01101110)						?	PALETTEE:
+			({COCO,BP,CRES,CHAR_LATCH_0[3:0]} == 8'b01101111)						?	PALETTEF:
+// 256 color mode
+			({COCO,BP,CRES} == 4'b0111)													?	CHAR_LATCH_0[11:8]:
+																										PALETTE8;
+assign PIXEL11 =
+			({COCO,BP,CRES} == 4'b0111)												?	CHAR_LATCH_0[15:12]:
+																									4'h0;
+
+assign PIXEL2 =
+//CoCo1 Text
+			({COCO,VID_CONT[3],CSS,CHAR_LATCH_0[7],CHARACTER3[5]} == 5'b10001)			?	PALETTEC:
+			({COCO,VID_CONT[3],CSS,CHAR_LATCH_0[7],CHARACTER3[5]} == 5'b10000)			?	PALETTED:
+			({COCO,VID_CONT[3],CSS,CHAR_LATCH_0[7],CHARACTER3[5]} == 5'b10101)			?	PALETTEE:
+			({COCO,VID_CONT[3],CSS,CHAR_LATCH_0[7],CHARACTER3[5]} == 5'b10100)			?	PALETTEF:
+// HR Text
+			({COCO,BP,CRES[0],CHARACTER3[5],CHAR_LATCH_0[13:11]}==7'b0011000)	?	PALETTE8:
+			({COCO,BP,CRES[0],CHARACTER3[5],CHAR_LATCH_0[13:11]}==7'b0011001)	?	PALETTE9:
+			({COCO,BP,CRES[0],CHARACTER3[5],CHAR_LATCH_0[13:11]}==7'b0011010)	?	PALETTEA:
+			({COCO,BP,CRES[0],CHARACTER3[5],CHAR_LATCH_0[13:11]}==7'b0011011)	?	PALETTEB:
+			({COCO,BP,CRES[0],CHARACTER3[5],CHAR_LATCH_0[13:11]}==7'b0011100)	?	PALETTEC:
+			({COCO,BP,CRES[0],CHARACTER3[5],CHAR_LATCH_0[13:11]}==7'b0011101)	?	PALETTED:
+			({COCO,BP,CRES[0],CHARACTER3[5],CHAR_LATCH_0[13:11]}==7'b0011110)	?	PALETTEE:
+			({COCO,BP,CRES[0],CHARACTER3[5],CHAR_LATCH_0[13:11]}==7'b0011111)	?	PALETTEF:
+			({COCO,BP,CRES[0],CHARACTER3[5],CHAR_LATCH_0[10:8]}==7'b0010000)	?	PALETTE0:
+			({COCO,BP,CRES[0],CHARACTER3[5],CHAR_LATCH_0[10:8]}==7'b0010001)	?	PALETTE1:
+			({COCO,BP,CRES[0],CHARACTER3[5],CHAR_LATCH_0[10:8]}==7'b0010010)	?	PALETTE2:
+			({COCO,BP,CRES[0],CHARACTER3[5],CHAR_LATCH_0[10:8]}==7'b0010011)	?	PALETTE3:
+			({COCO,BP,CRES[0],CHARACTER3[5],CHAR_LATCH_0[10:8]}==7'b0010100)	?	PALETTE4:
+			({COCO,BP,CRES[0],CHARACTER3[5],CHAR_LATCH_0[10:8]}==7'b0010101)	?	PALETTE5:
+			({COCO,BP,CRES[0],CHARACTER3[5],CHAR_LATCH_0[10:8]}==7'b0010110)	?	PALETTE6:
+			({COCO,BP,CRES[0],CHARACTER3[5],CHAR_LATCH_0[10:8]}==7'b0010111)	?	PALETTE7:
+// XTEXT
+			({COCO,BP,CRES[0],CHARACTER3[5]}==4'b0001)							?	PALETTEC:
+			({COCO,BP,CRES[0],CHARACTER3[5]}==4'b0000)							?	PALETTED:
+
+// Lowres graphics
+// 2 color
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[5]} == 5'b11100)		?	PALETTE8:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[5]} == 5'b11101)		?	PALETTE9:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[5]} == 5'b11110)		?	PALETTEA:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[5]} == 5'b11111)		?	PALETTEB:
+// 4 color
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[3:2]} == 6'b110000)	?	PALETTE0:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[3:2]} == 6'b110001)	?	PALETTE1:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[3:2]} == 6'b110010)	?	PALETTE2:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[3:2]} == 6'b110011)	?	PALETTE3:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[3:2]} == 6'b110100)	?	PALETTE4:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[3:2]} == 6'b110101)	?	PALETTE5:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[3:2]} == 6'b110110)	?	PALETTE6:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[3:2]} == 6'b110111)	?	PALETTE7:
+// Hires GR
+// 2 color
+			({COCO,BP,CRES,CHAR_LATCH_0[5]} == 5'b01000)							?	PALETTE0:
+			({COCO,BP,CRES,CHAR_LATCH_0[5]} == 5'b01001)							?	PALETTE1:
+// 4 Color
+			({COCO,BP,CRES,CHAR_LATCH_0[3:2]} == 6'b010100)						?	PALETTE0:
+			({COCO,BP,CRES,CHAR_LATCH_0[3:2]} == 6'b010101)						?	PALETTE1:
+			({COCO,BP,CRES,CHAR_LATCH_0[3:2]} == 6'b010110)						?	PALETTE2:
+			({COCO,BP,CRES,CHAR_LATCH_0[3:2]} == 6'b010111)						?	PALETTE3:
+// 16 color
+			({COCO,BP,CRES,CHAR_LATCH_0[15:12]} == 8'b01100000)						?	PALETTE0:
+			({COCO,BP,CRES,CHAR_LATCH_0[15:12]} == 8'b01100000)					?	PALETTE0:
+			({COCO,BP,CRES,CHAR_LATCH_0[15:12]} == 8'b01100001)					?	PALETTE1:
+			({COCO,BP,CRES,CHAR_LATCH_0[15:12]} == 8'b01100010)					?	PALETTE2:
+			({COCO,BP,CRES,CHAR_LATCH_0[15:12]} == 8'b01100011)					?	PALETTE3:
+			({COCO,BP,CRES,CHAR_LATCH_0[15:12]} == 8'b01100100)					?	PALETTE4:
+			({COCO,BP,CRES,CHAR_LATCH_0[15:12]} == 8'b01100101)					?	PALETTE5:
+			({COCO,BP,CRES,CHAR_LATCH_0[15:12]} == 8'b01100110)					?	PALETTE6:
+			({COCO,BP,CRES,CHAR_LATCH_0[15:12]} == 8'b01100111)					?	PALETTE7:
+			({COCO,BP,CRES,CHAR_LATCH_0[15:12]} == 8'b01101000)					?	PALETTE8:
+			({COCO,BP,CRES,CHAR_LATCH_0[15:12]} == 8'b01101001)					?	PALETTE9:
+			({COCO,BP,CRES,CHAR_LATCH_0[15:12]} == 8'b01101010)					?	PALETTEA:
+			({COCO,BP,CRES,CHAR_LATCH_0[15:12]} == 8'b01101011)					?	PALETTEB:
+			({COCO,BP,CRES,CHAR_LATCH_0[15:12]} == 8'b01101100)					?	PALETTEC:
+			({COCO,BP,CRES,CHAR_LATCH_0[15:12]} == 8'b01101101)					?	PALETTED:
+			({COCO,BP,CRES,CHAR_LATCH_0[15:12]} == 8'b01101110)					?	PALETTEE:
+			({COCO,BP,CRES,CHAR_LATCH_0[15:12]} == 8'b01101111)					?	PALETTEF:
+// 256 color mode
+			({COCO,BP,CRES} == 4'b0111)												?	CHAR_LATCH_1[3:0]:
+																									PALETTE8;
+assign PIXEL12 =
+			({COCO,BP,CRES} == 4'b0111)												?	CHAR_LATCH_1[7:4]:
+																									4'h0;
+
+assign PIXEL3 =
+//CoCo1 Text
+			({COCO,VID_CONT[3],CSS,CHAR_LATCH_0[7],CHARACTER3[4]} == 5'b10001)			?	PALETTEC:
+			({COCO,VID_CONT[3],CSS,CHAR_LATCH_0[7],CHARACTER3[4]} == 5'b10000)			?	PALETTED:
+			({COCO,VID_CONT[3],CSS,CHAR_LATCH_0[7],CHARACTER3[4]} == 5'b10101)			?	PALETTEE:
+			({COCO,VID_CONT[3],CSS,CHAR_LATCH_0[7],CHARACTER3[4]} == 5'b10100)			?	PALETTEF:
+// HR Text
+			({COCO,BP,CRES[0],CHARACTER3[4],CHAR_LATCH_0[13:11]}==7'b0011000)	?	PALETTE8:
+			({COCO,BP,CRES[0],CHARACTER3[4],CHAR_LATCH_0[13:11]}==7'b0011001)	?	PALETTE9:
+			({COCO,BP,CRES[0],CHARACTER3[4],CHAR_LATCH_0[13:11]}==7'b0011010)	?	PALETTEA:
+			({COCO,BP,CRES[0],CHARACTER3[4],CHAR_LATCH_0[13:11]}==7'b0011011)	?	PALETTEB:
+			({COCO,BP,CRES[0],CHARACTER3[4],CHAR_LATCH_0[13:11]}==7'b0011100)	?	PALETTEC:
+			({COCO,BP,CRES[0],CHARACTER3[4],CHAR_LATCH_0[13:11]}==7'b0011101)	?	PALETTED:
+			({COCO,BP,CRES[0],CHARACTER3[4],CHAR_LATCH_0[13:11]}==7'b0011110)	?	PALETTEE:
+			({COCO,BP,CRES[0],CHARACTER3[4],CHAR_LATCH_0[13:11]}==7'b0011111)	?	PALETTEF:
+			({COCO,BP,CRES[0],CHARACTER3[4],CHAR_LATCH_0[10:8]}==7'b0010000)	?	PALETTE0:
+			({COCO,BP,CRES[0],CHARACTER3[4],CHAR_LATCH_0[10:8]}==7'b0010001)	?	PALETTE1:
+			({COCO,BP,CRES[0],CHARACTER3[4],CHAR_LATCH_0[10:8]}==7'b0010010)	?	PALETTE2:
+			({COCO,BP,CRES[0],CHARACTER3[4],CHAR_LATCH_0[10:8]}==7'b0010011)	?	PALETTE3:
+			({COCO,BP,CRES[0],CHARACTER3[4],CHAR_LATCH_0[10:8]}==7'b0010100)	?	PALETTE4:
+			({COCO,BP,CRES[0],CHARACTER3[4],CHAR_LATCH_0[10:8]}==7'b0010101)	?	PALETTE5:
+			({COCO,BP,CRES[0],CHARACTER3[4],CHAR_LATCH_0[10:8]}==7'b0010110)	?	PALETTE6:
+			({COCO,BP,CRES[0],CHARACTER3[4],CHAR_LATCH_0[10:8]}==7'b0010111)	?	PALETTE7:
+// XTEXT
+			({COCO,BP,CRES[0],CHARACTER3[4]}==4'b0001)							?	PALETTEC:
+			({COCO,BP,CRES[0],CHARACTER3[4]}==4'b0000)							?	PALETTED:
+
+// Lowres graphics
+// 2 color
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[4]} == 5'b11100)		?	PALETTE8:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[4]} == 5'b11101)		?	PALETTE9:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[4]} == 5'b11110)		?	PALETTEA:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[4]} == 5'b11111)		?	PALETTEB:
+// 4 color
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[1:0]} == 6'b110000)	?	PALETTE0:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[1:0]} == 6'b110001)	?	PALETTE1:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[1:0]} == 6'b110010)	?	PALETTE2:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[1:0]} == 6'b110011)	?	PALETTE3:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[1:0]} == 6'b110100)	?	PALETTE4:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[1:0]} == 6'b110101)	?	PALETTE5:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[1:0]} == 6'b110110)	?	PALETTE6:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[1:0]} == 6'b110111)	?	PALETTE7:
+// Hires GR
+// 2 color
+			({COCO,BP,CRES,CHAR_LATCH_0[4]} == 5'b01000)							?	PALETTE0:
+			({COCO,BP,CRES,CHAR_LATCH_0[4]} == 5'b01001)							?	PALETTE1:
+// 4 Color
+			({COCO,BP,CRES,CHAR_LATCH_0[1:0]} == 6'b010100)						?	PALETTE0:
+			({COCO,BP,CRES,CHAR_LATCH_0[1:0]} == 6'b010101)						?	PALETTE1:
+			({COCO,BP,CRES,CHAR_LATCH_0[1:0]} == 6'b010110)						?	PALETTE2:
+			({COCO,BP,CRES,CHAR_LATCH_0[1:0]} == 6'b010111)						?	PALETTE3:
+// 16 color
+			({COCO,BP,CRES,CHAR_LATCH_0[11:8]} == 8'b01100000)						?	PALETTE0:
+			({COCO,BP,CRES,CHAR_LATCH_0[11:8]} == 8'b01100000)					?	PALETTE0:
+			({COCO,BP,CRES,CHAR_LATCH_0[11:8]} == 8'b01100001)					?	PALETTE1:
+			({COCO,BP,CRES,CHAR_LATCH_0[11:8]} == 8'b01100010)					?	PALETTE2:
+			({COCO,BP,CRES,CHAR_LATCH_0[11:8]} == 8'b01100011)					?	PALETTE3:
+			({COCO,BP,CRES,CHAR_LATCH_0[11:8]} == 8'b01100100)					?	PALETTE4:
+			({COCO,BP,CRES,CHAR_LATCH_0[11:8]} == 8'b01100101)					?	PALETTE5:
+			({COCO,BP,CRES,CHAR_LATCH_0[11:8]} == 8'b01100110)					?	PALETTE6:
+			({COCO,BP,CRES,CHAR_LATCH_0[11:8]} == 8'b01100111)					?	PALETTE7:
+			({COCO,BP,CRES,CHAR_LATCH_0[11:8]} == 8'b01101000)					?	PALETTE8:
+			({COCO,BP,CRES,CHAR_LATCH_0[11:8]} == 8'b01101001)					?	PALETTE9:
+			({COCO,BP,CRES,CHAR_LATCH_0[11:8]} == 8'b01101010)					?	PALETTEA:
+			({COCO,BP,CRES,CHAR_LATCH_0[11:8]} == 8'b01101011)					?	PALETTEB:
+			({COCO,BP,CRES,CHAR_LATCH_0[11:8]} == 8'b01101100)					?	PALETTEC:
+			({COCO,BP,CRES,CHAR_LATCH_0[11:8]} == 8'b01101101)					?	PALETTED:
+			({COCO,BP,CRES,CHAR_LATCH_0[11:8]} == 8'b01101110)					?	PALETTEE:
+			({COCO,BP,CRES,CHAR_LATCH_0[11:8]} == 8'b01101111)					?	PALETTEF:
+// 256 color mode
+			({COCO,BP,CRES} == 4'b0111)												?	CHAR_LATCH_1[11:8]:
+																									PALETTE8;
+assign PIXEL13 =
+			({COCO,BP,CRES} == 4'b0111)												?	CHAR_LATCH_1[15:12]:
+																									4'h0;
+
+assign PIXEL4 =
+//CoCo1 Text
+			({COCO,VID_CONT[3],CSS,CHAR_LATCH_0[7],CHARACTER3[3]} == 5'b10001)			?	PALETTEC:
+			({COCO,VID_CONT[3],CSS,CHAR_LATCH_0[7],CHARACTER3[3]} == 5'b10000)			?	PALETTED:
+			({COCO,VID_CONT[3],CSS,CHAR_LATCH_0[7],CHARACTER3[3]} == 5'b10101)			?	PALETTEE:
+			({COCO,VID_CONT[3],CSS,CHAR_LATCH_0[7],CHARACTER3[3]} == 5'b10100)			?	PALETTEF:
+// HR Text
+			({COCO,BP,CRES[0],CHARACTER3[3],CHAR_LATCH_0[13:11]}==7'b0011000)	?	PALETTE8:
+			({COCO,BP,CRES[0],CHARACTER3[3],CHAR_LATCH_0[13:11]}==7'b0011001)	?	PALETTE9:
+			({COCO,BP,CRES[0],CHARACTER3[3],CHAR_LATCH_0[13:11]}==7'b0011010)	?	PALETTEA:
+			({COCO,BP,CRES[0],CHARACTER3[3],CHAR_LATCH_0[13:11]}==7'b0011011)	?	PALETTEB:
+			({COCO,BP,CRES[0],CHARACTER3[3],CHAR_LATCH_0[13:11]}==7'b0011100)	?	PALETTEC:
+			({COCO,BP,CRES[0],CHARACTER3[3],CHAR_LATCH_0[13:11]}==7'b0011101)	?	PALETTED:
+			({COCO,BP,CRES[0],CHARACTER3[3],CHAR_LATCH_0[13:11]}==7'b0011110)	?	PALETTEE:
+			({COCO,BP,CRES[0],CHARACTER3[3],CHAR_LATCH_0[13:11]}==7'b0011111)	?	PALETTEF:
+			({COCO,BP,CRES[0],CHARACTER3[3],CHAR_LATCH_0[10:8]}==7'b0010000)	?	PALETTE0:
+			({COCO,BP,CRES[0],CHARACTER3[3],CHAR_LATCH_0[10:8]}==7'b0010001)	?	PALETTE1:
+			({COCO,BP,CRES[0],CHARACTER3[3],CHAR_LATCH_0[10:8]}==7'b0010010)	?	PALETTE2:
+			({COCO,BP,CRES[0],CHARACTER3[3],CHAR_LATCH_0[10:8]}==7'b0010011)	?	PALETTE3:
+			({COCO,BP,CRES[0],CHARACTER3[3],CHAR_LATCH_0[10:8]}==7'b0010100)	?	PALETTE4:
+			({COCO,BP,CRES[0],CHARACTER3[3],CHAR_LATCH_0[10:8]}==7'b0010101)	?	PALETTE5:
+			({COCO,BP,CRES[0],CHARACTER3[3],CHAR_LATCH_0[10:8]}==7'b0010110)	?	PALETTE6:
+			({COCO,BP,CRES[0],CHARACTER3[3],CHAR_LATCH_0[10:8]}==7'b0010111)	?	PALETTE7:
+// XTEXT
+			({COCO,BP,CRES[0],CHARACTER3[3]}==4'b0001)							?	PALETTEC:
+			({COCO,BP,CRES[0],CHARACTER3[3]}==4'b0000)							?	PALETTED:
+
+// Lowres graphics
+// 2 color
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[3]} == 5'b11100)		?	PALETTE8:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[3]} == 5'b11101)		?	PALETTE9:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[3]} == 5'b11110)		?	PALETTEA:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[3]} == 5'b11111)		?	PALETTEB:
+// 4 color
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[15:14]} == 6'b110000)	?	PALETTE0:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[15:14]} == 6'b110001)	?	PALETTE1:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[15:14]} == 6'b110010)	?	PALETTE2:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[15:14]} == 6'b110011)	?	PALETTE3:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[15:14]} == 6'b110100)	?	PALETTE4:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[15:14]} == 6'b110101)	?	PALETTE5:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[15:14]} == 6'b110110)	?	PALETTE6:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[15:14]} == 6'b110111)	?	PALETTE7:
+// Hires GR
+// 2 color
+			({COCO,BP,CRES,CHAR_LATCH_0[3]} == 5'b01000)							?	PALETTE0:
+			({COCO,BP,CRES,CHAR_LATCH_0[3]} == 5'b01001)							?	PALETTE1:
+// 4 Color
+			({COCO,BP,CRES,CHAR_LATCH_0[15:14]} == 6'b010100)						?	PALETTE0:
+			({COCO,BP,CRES,CHAR_LATCH_0[15:14]} == 6'b010101)						?	PALETTE1:
+			({COCO,BP,CRES,CHAR_LATCH_0[15:14]} == 6'b010110)						?	PALETTE2:
+			({COCO,BP,CRES,CHAR_LATCH_0[15:14]} == 6'b010111)						?	PALETTE3:
+// 16 color
+			({COCO,BP,CRES,CHAR_LATCH_1[7:4]} == 8'b01100000)						?	PALETTE0:
+			({COCO,BP,CRES,CHAR_LATCH_1[7:4]} == 8'b01100001)						?	PALETTE1:
+			({COCO,BP,CRES,CHAR_LATCH_1[7:4]} == 8'b01100010)						?	PALETTE2:
+			({COCO,BP,CRES,CHAR_LATCH_1[7:4]} == 8'b01100011)						?	PALETTE3:
+			({COCO,BP,CRES,CHAR_LATCH_1[7:4]} == 8'b01100100)						?	PALETTE4:
+			({COCO,BP,CRES,CHAR_LATCH_1[7:4]} == 8'b01100101)						?	PALETTE5:
+			({COCO,BP,CRES,CHAR_LATCH_1[7:4]} == 8'b01100110)						?	PALETTE6:
+			({COCO,BP,CRES,CHAR_LATCH_1[7:4]} == 8'b01100111)						?	PALETTE7:
+			({COCO,BP,CRES,CHAR_LATCH_1[7:4]} == 8'b01101000)						?	PALETTE8:
+			({COCO,BP,CRES,CHAR_LATCH_1[7:4]} == 8'b01101001)						?	PALETTE9:
+			({COCO,BP,CRES,CHAR_LATCH_1[7:4]} == 8'b01101010)						?	PALETTEA:
+			({COCO,BP,CRES,CHAR_LATCH_1[7:4]} == 8'b01101011)						?	PALETTEB:
+			({COCO,BP,CRES,CHAR_LATCH_1[7:4]} == 8'b01101100)						?	PALETTEC:
+			({COCO,BP,CRES,CHAR_LATCH_1[7:4]} == 8'b01101101)						?	PALETTED:
+			({COCO,BP,CRES,CHAR_LATCH_1[7:4]} == 8'b01101110)						?	PALETTEE:
+			({COCO,BP,CRES,CHAR_LATCH_1[7:4]} == 8'b01101111)						?	PALETTEF:
+// 256 color mode
+			({COCO,BP,CRES} == 4'b0111)													?	CHAR_LATCH_2[3:0]:
+																										PALETTE8;
+assign PIXEL14 =
+			({COCO,BP,CRES} == 4'b0111)												?	CHAR_LATCH_2[7:4]:
+																									4'h0;
+
+assign PIXEL5 =
+//CoCo1 Text
+			({COCO,VID_CONT[3],CSS,CHAR_LATCH_0[7],CHARACTER3[2]} == 5'b10001)			?	PALETTEC:
+			({COCO,VID_CONT[3],CSS,CHAR_LATCH_0[7],CHARACTER3[2]} == 5'b10000)			?	PALETTED:
+			({COCO,VID_CONT[3],CSS,CHAR_LATCH_0[7],CHARACTER3[2]} == 5'b10101)			?	PALETTEE:
+			({COCO,VID_CONT[3],CSS,CHAR_LATCH_0[7],CHARACTER3[2]} == 5'b10100)			?	PALETTEF:
+// HR Text
+			({COCO,BP,CRES[0],CHARACTER3[2],CHAR_LATCH_0[13:11]}==7'b0011000)	?	PALETTE8:
+			({COCO,BP,CRES[0],CHARACTER3[2],CHAR_LATCH_0[13:11]}==7'b0011001)	?	PALETTE9:
+			({COCO,BP,CRES[0],CHARACTER3[2],CHAR_LATCH_0[13:11]}==7'b0011010)	?	PALETTEA:
+			({COCO,BP,CRES[0],CHARACTER3[2],CHAR_LATCH_0[13:11]}==7'b0011011)	?	PALETTEB:
+			({COCO,BP,CRES[0],CHARACTER3[2],CHAR_LATCH_0[13:11]}==7'b0011100)	?	PALETTEC:
+			({COCO,BP,CRES[0],CHARACTER3[2],CHAR_LATCH_0[13:11]}==7'b0011101)	?	PALETTED:
+			({COCO,BP,CRES[0],CHARACTER3[2],CHAR_LATCH_0[13:11]}==7'b0011110)	?	PALETTEE:
+			({COCO,BP,CRES[0],CHARACTER3[2],CHAR_LATCH_0[13:11]}==7'b0011111)	?	PALETTEF:
+			({COCO,BP,CRES[0],CHARACTER3[2],CHAR_LATCH_0[10:8]}==7'b0010000)	?	PALETTE0:
+			({COCO,BP,CRES[0],CHARACTER3[2],CHAR_LATCH_0[10:8]}==7'b0010001)	?	PALETTE1:
+			({COCO,BP,CRES[0],CHARACTER3[2],CHAR_LATCH_0[10:8]}==7'b0010010)	?	PALETTE2:
+			({COCO,BP,CRES[0],CHARACTER3[2],CHAR_LATCH_0[10:8]}==7'b0010011)	?	PALETTE3:
+			({COCO,BP,CRES[0],CHARACTER3[2],CHAR_LATCH_0[10:8]}==7'b0010100)	?	PALETTE4:
+			({COCO,BP,CRES[0],CHARACTER3[2],CHAR_LATCH_0[10:8]}==7'b0010101)	?	PALETTE5:
+			({COCO,BP,CRES[0],CHARACTER3[2],CHAR_LATCH_0[10:8]}==7'b0010110)	?	PALETTE6:
+			({COCO,BP,CRES[0],CHARACTER3[2],CHAR_LATCH_0[10:8]}==7'b0010111)	?	PALETTE7:
+// XTEXT
+			({COCO,BP,CRES[0],CHARACTER3[2]}==4'b0001)							?	PALETTEC:
+			({COCO,BP,CRES[0],CHARACTER3[2]}==4'b0000)							?	PALETTED:
+
+// Lowres graphics
+// 2 color
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[2]} == 5'b11100)		?	PALETTE8:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[2]} == 5'b11101)		?	PALETTE9:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[2]} == 5'b11110)		?	PALETTEA:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[2]} == 5'b11111)		?	PALETTEB:
+// 4 color
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[13:12]} == 6'b110000)	?	PALETTE0:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[13:12]} == 6'b110001)	?	PALETTE1:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[13:12]} == 6'b110010)	?	PALETTE2:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[13:12]} == 6'b110011)	?	PALETTE3:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[13:12]} == 6'b110100)	?	PALETTE4:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[13:12]} == 6'b110101)	?	PALETTE5:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[13:12]} == 6'b110110)	?	PALETTE6:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[13:12]} == 6'b110111)	?	PALETTE7:
+// Hires GR
+// 2 color
+			({COCO,BP,CRES,CHAR_LATCH_0[2]} == 5'b01000)							?	PALETTE0:
+			({COCO,BP,CRES,CHAR_LATCH_0[2]} == 5'b01001)							?	PALETTE1:
+// 4 Color
+			({COCO,BP,CRES,CHAR_LATCH_0[13:12]} == 6'b010100)						?	PALETTE0:
+			({COCO,BP,CRES,CHAR_LATCH_0[13:12]} == 6'b010101)						?	PALETTE1:
+			({COCO,BP,CRES,CHAR_LATCH_0[13:12]} == 6'b010110)						?	PALETTE2:
+			({COCO,BP,CRES,CHAR_LATCH_0[13:12]} == 6'b010111)						?	PALETTE3:
+// 16 color
+			({COCO,BP,CRES,CHAR_LATCH_1[3:0]} == 8'b01100000)						?	PALETTE0:
+			({COCO,BP,CRES,CHAR_LATCH_1[3:0]} == 8'b01100001)						?	PALETTE1:
+			({COCO,BP,CRES,CHAR_LATCH_1[3:0]} == 8'b01100010)						?	PALETTE2:
+			({COCO,BP,CRES,CHAR_LATCH_1[3:0]} == 8'b01100011)						?	PALETTE3:
+			({COCO,BP,CRES,CHAR_LATCH_1[3:0]} == 8'b01100100)						?	PALETTE4:
+			({COCO,BP,CRES,CHAR_LATCH_1[3:0]} == 8'b01100101)						?	PALETTE5:
+			({COCO,BP,CRES,CHAR_LATCH_1[3:0]} == 8'b01100110)						?	PALETTE6:
+			({COCO,BP,CRES,CHAR_LATCH_1[3:0]} == 8'b01100111)						?	PALETTE7:
+			({COCO,BP,CRES,CHAR_LATCH_1[3:0]} == 8'b01101000)						?	PALETTE8:
+			({COCO,BP,CRES,CHAR_LATCH_1[3:0]} == 8'b01101001)						?	PALETTE9:
+			({COCO,BP,CRES,CHAR_LATCH_1[3:0]} == 8'b01101010)						?	PALETTEA:
+			({COCO,BP,CRES,CHAR_LATCH_1[3:0]} == 8'b01101011)						?	PALETTEB:
+			({COCO,BP,CRES,CHAR_LATCH_1[3:0]} == 8'b01101100)						?	PALETTEC:
+			({COCO,BP,CRES,CHAR_LATCH_1[3:0]} == 8'b01101101)						?	PALETTED:
+			({COCO,BP,CRES,CHAR_LATCH_1[3:0]} == 8'b01101110)						?	PALETTEE:
+			({COCO,BP,CRES,CHAR_LATCH_1[3:0]} == 8'b01101111)						?	PALETTEF:
+// 256 color mode
+			({COCO,BP,CRES} == 4'b0111)													?	CHAR_LATCH_2[11:8]:
+																										PALETTE8;
+assign PIXEL15 =
+			({COCO,BP,CRES} == 4'b0111)													?	CHAR_LATCH_2[15:12]:
+																										4'h0;
+
+assign PIXEL6 =
+//CoCo1 Text
+			({COCO,VID_CONT[3],CSS,CHAR_LATCH_0[7],CHARACTER3[1]} == 5'b10001)			?	PALETTEC:
+			({COCO,VID_CONT[3],CSS,CHAR_LATCH_0[7],CHARACTER3[1]} == 5'b10000)			?	PALETTED:
+			({COCO,VID_CONT[3],CSS,CHAR_LATCH_0[7],CHARACTER3[1]} == 5'b10101)			?	PALETTEE:
+			({COCO,VID_CONT[3],CSS,CHAR_LATCH_0[7],CHARACTER3[1]} == 5'b10100)			?	PALETTEF:
+// HR Text
+			({COCO,BP,CRES[0],CHARACTER3[1],CHAR_LATCH_0[13:11]}==7'b0011000)	?	PALETTE8:
+			({COCO,BP,CRES[0],CHARACTER3[1],CHAR_LATCH_0[13:11]}==7'b0011001)	?	PALETTE9:
+			({COCO,BP,CRES[0],CHARACTER3[1],CHAR_LATCH_0[13:11]}==7'b0011010)	?	PALETTEA:
+			({COCO,BP,CRES[0],CHARACTER3[1],CHAR_LATCH_0[13:11]}==7'b0011011)	?	PALETTEB:
+			({COCO,BP,CRES[0],CHARACTER3[1],CHAR_LATCH_0[13:11]}==7'b0011100)	?	PALETTEC:
+			({COCO,BP,CRES[0],CHARACTER3[1],CHAR_LATCH_0[13:11]}==7'b0011101)	?	PALETTED:
+			({COCO,BP,CRES[0],CHARACTER3[1],CHAR_LATCH_0[13:11]}==7'b0011110)	?	PALETTEE:
+			({COCO,BP,CRES[0],CHARACTER3[1],CHAR_LATCH_0[13:11]}==7'b0011111)	?	PALETTEF:
+			({COCO,BP,CRES[0],CHARACTER3[1],CHAR_LATCH_0[10:8]}==7'b0010000)	?	PALETTE0:
+			({COCO,BP,CRES[0],CHARACTER3[1],CHAR_LATCH_0[10:8]}==7'b0010001)	?	PALETTE1:
+			({COCO,BP,CRES[0],CHARACTER3[1],CHAR_LATCH_0[10:8]}==7'b0010010)	?	PALETTE2:
+			({COCO,BP,CRES[0],CHARACTER3[1],CHAR_LATCH_0[10:8]}==7'b0010011)	?	PALETTE3:
+			({COCO,BP,CRES[0],CHARACTER3[1],CHAR_LATCH_0[10:8]}==7'b0010100)	?	PALETTE4:
+			({COCO,BP,CRES[0],CHARACTER3[1],CHAR_LATCH_0[10:8]}==7'b0010101)	?	PALETTE5:
+			({COCO,BP,CRES[0],CHARACTER3[1],CHAR_LATCH_0[10:8]}==7'b0010110)	?	PALETTE6:
+			({COCO,BP,CRES[0],CHARACTER3[1],CHAR_LATCH_0[10:8]}==7'b0010111)	?	PALETTE7:
+// XTEXT
+			({COCO,BP,CRES[0],CHARACTER3[1]}==4'b0001)							?	PALETTEC:
+			({COCO,BP,CRES[0],CHARACTER3[1]}==4'b0000)							?	PALETTED:
+
+// Lowres graphics
+// 2 color
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[1]} == 5'b11100)		?	PALETTE8:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[1]} == 5'b11101)		?	PALETTE9:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[1]} == 5'b11110)		?	PALETTEA:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[1]} == 5'b11111)		?	PALETTEB:
+// 4 color
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[11:10]} == 6'b110000)	?	PALETTE0:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[11:10]} == 6'b110001)	?	PALETTE1:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[11:10]} == 6'b110010)	?	PALETTE2:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[11:10]} == 6'b110011)	?	PALETTE3:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[11:10]} == 6'b110100)	?	PALETTE4:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[11:10]} == 6'b110101)	?	PALETTE5:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[11:10]} == 6'b110110)	?	PALETTE6:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[11:10]} == 6'b110111)	?	PALETTE7:
+// Hires GR
+// 2 color
+			({COCO,BP,CRES,CHAR_LATCH_0[1]} == 5'b01000)							?	PALETTE0:
+			({COCO,BP,CRES,CHAR_LATCH_0[1]} == 5'b01001)							?	PALETTE1:
+// 4 Color
+			({COCO,BP,CRES,CHAR_LATCH_0[11:10]} == 6'b010100)						?	PALETTE0:
+			({COCO,BP,CRES,CHAR_LATCH_0[11:10]} == 6'b010101)						?	PALETTE1:
+			({COCO,BP,CRES,CHAR_LATCH_0[11:10]} == 6'b010110)						?	PALETTE2:
+			({COCO,BP,CRES,CHAR_LATCH_0[11:10]} == 6'b010111)						?	PALETTE3:
+// 16 color
+			({COCO,BP,CRES,CHAR_LATCH_1[15:12]} == 8'b01100000)						?	PALETTE0:
+			({COCO,BP,CRES,CHAR_LATCH_1[15:12]} == 8'b01100001)						?	PALETTE1:
+			({COCO,BP,CRES,CHAR_LATCH_1[15:12]} == 8'b01100010)						?	PALETTE2:
+			({COCO,BP,CRES,CHAR_LATCH_1[15:12]} == 8'b01100011)						?	PALETTE3:
+			({COCO,BP,CRES,CHAR_LATCH_1[15:12]} == 8'b01100100)						?	PALETTE4:
+			({COCO,BP,CRES,CHAR_LATCH_1[15:12]} == 8'b01100101)						?	PALETTE5:
+			({COCO,BP,CRES,CHAR_LATCH_1[15:12]} == 8'b01100110)						?	PALETTE6:
+			({COCO,BP,CRES,CHAR_LATCH_1[15:12]} == 8'b01100111)						?	PALETTE7:
+			({COCO,BP,CRES,CHAR_LATCH_1[15:12]} == 8'b01101000)						?	PALETTE8:
+			({COCO,BP,CRES,CHAR_LATCH_1[15:12]} == 8'b01101001)						?	PALETTE9:
+			({COCO,BP,CRES,CHAR_LATCH_1[15:12]} == 8'b01101010)						?	PALETTEA:
+			({COCO,BP,CRES,CHAR_LATCH_1[15:12]} == 8'b01101011)						?	PALETTEB:
+			({COCO,BP,CRES,CHAR_LATCH_1[15:12]} == 8'b01101100)						?	PALETTEC:
+			({COCO,BP,CRES,CHAR_LATCH_1[15:12]} == 8'b01101101)						?	PALETTED:
+			({COCO,BP,CRES,CHAR_LATCH_1[15:12]} == 8'b01101110)						?	PALETTEE:
+			({COCO,BP,CRES,CHAR_LATCH_1[15:12]} == 8'b01101111)						?	PALETTEF:
+// 256 color mode
+			({COCO,BP,CRES} == 4'b0111)													?	CHAR_LATCH_3[3:0]:
+																										PALETTE8;
+assign PIXEL16 =
+			({COCO,BP,CRES} == 4'b0111)													?	CHAR_LATCH_3[7:4]:
+																										4'h0;
+
+assign PIXEL7 =
+//CoCo1 Text
+			({COCO,VID_CONT[3],CSS,CHAR_LATCH_0[7],CHARACTER3[0]} == 5'b10001)			?	PALETTEC:
+			({COCO,VID_CONT[3],CSS,CHAR_LATCH_0[7],CHARACTER3[0]} == 5'b10000)			?	PALETTED:
+			({COCO,VID_CONT[3],CSS,CHAR_LATCH_0[7],CHARACTER3[0]} == 5'b10101)			?	PALETTEE:
+			({COCO,VID_CONT[3],CSS,CHAR_LATCH_0[7],CHARACTER3[0]} == 5'b10100)			?	PALETTEF:
+// HR Text
+			({COCO,BP,CRES[0],CHARACTER3[0],CHAR_LATCH_0[13:11]}==7'b0011000)	?	PALETTE8:
+			({COCO,BP,CRES[0],CHARACTER3[0],CHAR_LATCH_0[13:11]}==7'b0011001)	?	PALETTE9:
+			({COCO,BP,CRES[0],CHARACTER3[0],CHAR_LATCH_0[13:11]}==7'b0011010)	?	PALETTEA:
+			({COCO,BP,CRES[0],CHARACTER3[0],CHAR_LATCH_0[13:11]}==7'b0011011)	?	PALETTEB:
+			({COCO,BP,CRES[0],CHARACTER3[0],CHAR_LATCH_0[13:11]}==7'b0011100)	?	PALETTEC:
+			({COCO,BP,CRES[0],CHARACTER3[0],CHAR_LATCH_0[13:11]}==7'b0011101)	?	PALETTED:
+			({COCO,BP,CRES[0],CHARACTER3[0],CHAR_LATCH_0[13:11]}==7'b0011110)	?	PALETTEE:
+			({COCO,BP,CRES[0],CHARACTER3[0],CHAR_LATCH_0[13:11]}==7'b0011111)	?	PALETTEF:
+			({COCO,BP,CRES[0],CHARACTER3[0],CHAR_LATCH_0[10:8]}==7'b0010000)	?	PALETTE0:
+			({COCO,BP,CRES[0],CHARACTER3[0],CHAR_LATCH_0[10:8]}==7'b0010001)	?	PALETTE1:
+			({COCO,BP,CRES[0],CHARACTER3[0],CHAR_LATCH_0[10:8]}==7'b0010010)	?	PALETTE2:
+			({COCO,BP,CRES[0],CHARACTER3[0],CHAR_LATCH_0[10:8]}==7'b0010011)	?	PALETTE3:
+			({COCO,BP,CRES[0],CHARACTER3[0],CHAR_LATCH_0[10:8]}==7'b0010100)	?	PALETTE4:
+			({COCO,BP,CRES[0],CHARACTER3[0],CHAR_LATCH_0[10:8]}==7'b0010101)	?	PALETTE5:
+			({COCO,BP,CRES[0],CHARACTER3[0],CHAR_LATCH_0[10:8]}==7'b0010110)	?	PALETTE6:
+			({COCO,BP,CRES[0],CHARACTER3[0],CHAR_LATCH_0[10:8]}==7'b0010111)	?	PALETTE7:
+// XTEXT
+			({COCO,BP,CRES[0],CHARACTER3[0]}==4'b0001)							?	PALETTEC:
+			({COCO,BP,CRES[0],CHARACTER3[0]}==4'b0000)							?	PALETTED:
+
+// Lowres graphics
+// 2 color
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[0]} == 5'b11100)		?	PALETTE8:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[0]} == 5'b11101)		?	PALETTE9:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[0]} == 5'b11110)		?	PALETTEA:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[0]} == 5'b11111)		?	PALETTEB:
+// 4 color
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[9:8]} == 6'b110000)	?	PALETTE0:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[9:8]} == 6'b110001)	?	PALETTE1:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[9:8]} == 6'b110010)	?	PALETTE2:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[9:8]} == 6'b110011)	?	PALETTE3:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[9:8]} == 6'b110100)	?	PALETTE4:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[9:8]} == 6'b110101)	?	PALETTE5:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[9:8]} == 6'b110110)	?	PALETTE6:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS,CHAR_LATCH_0[9:8]} == 6'b110111)	?	PALETTE7:
+// Hires GR
+// 2 color
+			({COCO,BP,CRES,CHAR_LATCH_0[0]} == 5'b01000)							?	PALETTE0:
+			({COCO,BP,CRES,CHAR_LATCH_0[0]} == 5'b01001)							?	PALETTE1:
+// 4 Color
+			({COCO,BP,CRES,CHAR_LATCH_0[9:8]} == 6'b010100)						?	PALETTE0:
+			({COCO,BP,CRES,CHAR_LATCH_0[9:8]} == 6'b010101)						?	PALETTE1:
+			({COCO,BP,CRES,CHAR_LATCH_0[9:8]} == 6'b010110)						?	PALETTE2:
+			({COCO,BP,CRES,CHAR_LATCH_0[9:8]} == 6'b010111)						?	PALETTE3:
+// 16 color
+			({COCO,BP,CRES,CHAR_LATCH_1[11:8]} == 8'b01100000)						?	PALETTE0:
+			({COCO,BP,CRES,CHAR_LATCH_1[11:8]} == 8'b01100001)						?	PALETTE1:
+			({COCO,BP,CRES,CHAR_LATCH_1[11:8]} == 8'b01100010)						?	PALETTE2:
+			({COCO,BP,CRES,CHAR_LATCH_1[11:8]} == 8'b01100011)						?	PALETTE3:
+			({COCO,BP,CRES,CHAR_LATCH_1[11:8]} == 8'b01100100)						?	PALETTE4:
+			({COCO,BP,CRES,CHAR_LATCH_1[11:8]} == 8'b01100101)						?	PALETTE5:
+			({COCO,BP,CRES,CHAR_LATCH_1[11:8]} == 8'b01100110)						?	PALETTE6:
+			({COCO,BP,CRES,CHAR_LATCH_1[11:8]} == 8'b01100111)						?	PALETTE7:
+			({COCO,BP,CRES,CHAR_LATCH_1[11:8]} == 8'b01101000)						?	PALETTE8:
+			({COCO,BP,CRES,CHAR_LATCH_1[11:8]} == 8'b01101001)						?	PALETTE9:
+			({COCO,BP,CRES,CHAR_LATCH_1[11:8]} == 8'b01101010)						?	PALETTEA:
+			({COCO,BP,CRES,CHAR_LATCH_1[11:8]} == 8'b01101011)						?	PALETTEB:
+			({COCO,BP,CRES,CHAR_LATCH_1[11:8]} == 8'b01101100)						?	PALETTEC:
+			({COCO,BP,CRES,CHAR_LATCH_1[11:8]} == 8'b01101101)						?	PALETTED:
+			({COCO,BP,CRES,CHAR_LATCH_1[11:8]} == 8'b01101110)						?	PALETTEE:
+			({COCO,BP,CRES,CHAR_LATCH_1[11:8]} == 8'b01101111)						?	PALETTEF:
+// 256 color mode
+			({COCO,BP,CRES} == 4'b0111)													?	CHAR_LATCH_3[11:8]:
+																										PALETTE8;
+assign PIXEL17 =
+			({COCO,BP,CRES} == 4'b0111)													?	CHAR_LATCH_3[15:12]:
+																										4'h0;
+
+assign PIXEL8 =
+// HR Text
+			({COCO,BP,CRES[0],CHARACTER4[7],CHAR_LATCH_1[13:11]}==7'b0011000)	?	PALETTE8:
+			({COCO,BP,CRES[0],CHARACTER4[7],CHAR_LATCH_1[13:11]}==7'b0011001)	?	PALETTE9:
+			({COCO,BP,CRES[0],CHARACTER4[7],CHAR_LATCH_1[13:11]}==7'b0011010)	?	PALETTEA:
+			({COCO,BP,CRES[0],CHARACTER4[7],CHAR_LATCH_1[13:11]}==7'b0011011)	?	PALETTEB:
+			({COCO,BP,CRES[0],CHARACTER4[7],CHAR_LATCH_1[13:11]}==7'b0011100)	?	PALETTEC:
+			({COCO,BP,CRES[0],CHARACTER4[7],CHAR_LATCH_1[13:11]}==7'b0011101)	?	PALETTED:
+			({COCO,BP,CRES[0],CHARACTER4[7],CHAR_LATCH_1[13:11]}==7'b0011110)	?	PALETTEE:
+			({COCO,BP,CRES[0],CHARACTER4[7],CHAR_LATCH_1[13:11]}==7'b0011111)	?	PALETTEF:
+			({COCO,BP,CRES[0],CHARACTER4[7],CHAR_LATCH_1[10:8]}== 7'b0010000)	?	PALETTE0:
+			({COCO,BP,CRES[0],CHARACTER4[7],CHAR_LATCH_1[10:8]}== 7'b0010001)	?	PALETTE1:
+			({COCO,BP,CRES[0],CHARACTER4[7],CHAR_LATCH_1[10:8]}== 7'b0010010)	?	PALETTE2:
+			({COCO,BP,CRES[0],CHARACTER4[7],CHAR_LATCH_1[10:8]}== 7'b0010011)	?	PALETTE3:
+			({COCO,BP,CRES[0],CHARACTER4[7],CHAR_LATCH_1[10:8]}== 7'b0010100)	?	PALETTE4:
+			({COCO,BP,CRES[0],CHARACTER4[7],CHAR_LATCH_1[10:8]}== 7'b0010101)	?	PALETTE5:
+			({COCO,BP,CRES[0],CHARACTER4[7],CHAR_LATCH_1[10:8]}== 7'b0010110)	?	PALETTE6:
+			({COCO,BP,CRES[0],CHARACTER4[7],CHAR_LATCH_1[10:8]}== 7'b0010111)	?	PALETTE7:
+// XTEXT
+			({COCO,BP,CRES[0],CHARACTER1[7]}==4'b0001)							?	PALETTEC:
+			({COCO,BP,CRES[0],CHARACTER1[7]}==4'b0000)							?	PALETTED:
+// Hires GR
+// 2 color
+			({COCO,BP,CRES,CHAR_LATCH_0[15]} == 5'b01000)							?	PALETTE0:
+			({COCO,BP,CRES,CHAR_LATCH_0[15]} == 5'b01001)							?	PALETTE1:
+// 4 Color
+			({COCO,BP,CRES,CHAR_LATCH_1[7:6]} == 6'b010100)						?	PALETTE0:
+			({COCO,BP,CRES,CHAR_LATCH_1[7:6]} == 6'b010101)						?	PALETTE1:
+			({COCO,BP,CRES,CHAR_LATCH_1[7:6]} == 6'b010110)						?	PALETTE2:
+			({COCO,BP,CRES,CHAR_LATCH_1[7:6]} == 6'b010111)						?	PALETTE3:
+// 16 color
+			({COCO,BP,CRES,CHAR_LATCH_2[7:4]} == 8'b01100000)						?	PALETTE0:
+			({COCO,BP,CRES,CHAR_LATCH_2[7:4]} == 8'b01100001)						?	PALETTE1:
+			({COCO,BP,CRES,CHAR_LATCH_2[7:4]} == 8'b01100010)						?	PALETTE2:
+			({COCO,BP,CRES,CHAR_LATCH_2[7:4]} == 8'b01100011)						?	PALETTE3:
+			({COCO,BP,CRES,CHAR_LATCH_2[7:4]} == 8'b01100100)						?	PALETTE4:
+			({COCO,BP,CRES,CHAR_LATCH_2[7:4]} == 8'b01100101)						?	PALETTE5:
+			({COCO,BP,CRES,CHAR_LATCH_2[7:4]} == 8'b01100110)						?	PALETTE6:
+			({COCO,BP,CRES,CHAR_LATCH_2[7:4]} == 8'b01100111)						?	PALETTE7:
+			({COCO,BP,CRES,CHAR_LATCH_2[7:4]} == 8'b01101000)						?	PALETTE8:
+			({COCO,BP,CRES,CHAR_LATCH_2[7:4]} == 8'b01101001)						?	PALETTE9:
+			({COCO,BP,CRES,CHAR_LATCH_2[7:4]} == 8'b01101010)						?	PALETTEA:
+			({COCO,BP,CRES,CHAR_LATCH_2[7:4]} == 8'b01101011)						?	PALETTEB:
+			({COCO,BP,CRES,CHAR_LATCH_2[7:4]} == 8'b01101100)						?	PALETTEC:
+			({COCO,BP,CRES,CHAR_LATCH_2[7:4]} == 8'b01101101)						?	PALETTED:
+			({COCO,BP,CRES,CHAR_LATCH_2[7:4]} == 8'b01101110)						?	PALETTEE:
+			({COCO,BP,CRES,CHAR_LATCH_2[7:4]} == 8'b01101111)						?	PALETTEF:
+// 256 color mode
+`ifndef NEW_SRAM
+			({COCO,BP,CRES} == 4'b0111)													?	CHAR_LATCH_4[3:0]:
+`endif
+																										PALETTE8;
+assign PIXEL18 =
+`ifndef NEW_SRAM
+			({COCO,BP,CRES} == 4'b0111)													?	CHAR_LATCH_4[7:4]:
+`endif
+																										4'h0;
+
+assign PIXEL9 =
+// HR Text
+			({COCO,BP,CRES[0],CHARACTER4[6],CHAR_LATCH_1[13:11]}==7'b0011000)	?	PALETTE8:
+			({COCO,BP,CRES[0],CHARACTER4[6],CHAR_LATCH_1[13:11]}==7'b0011001)	?	PALETTE9:
+			({COCO,BP,CRES[0],CHARACTER4[6],CHAR_LATCH_1[13:11]}==7'b0011010)	?	PALETTEA:
+			({COCO,BP,CRES[0],CHARACTER4[6],CHAR_LATCH_1[13:11]}==7'b0011011)	?	PALETTEB:
+			({COCO,BP,CRES[0],CHARACTER4[6],CHAR_LATCH_1[13:11]}==7'b0011100)	?	PALETTEC:
+			({COCO,BP,CRES[0],CHARACTER4[6],CHAR_LATCH_1[13:11]}==7'b0011101)	?	PALETTED:
+			({COCO,BP,CRES[0],CHARACTER4[6],CHAR_LATCH_1[13:11]}==7'b0011110)	?	PALETTEE:
+			({COCO,BP,CRES[0],CHARACTER4[6],CHAR_LATCH_1[13:11]}==7'b0011111)	?	PALETTEF:
+			({COCO,BP,CRES[0],CHARACTER4[6],CHAR_LATCH_1[10:8]}== 7'b0010000)	?	PALETTE0:
+			({COCO,BP,CRES[0],CHARACTER4[6],CHAR_LATCH_1[10:8]}== 7'b0010001)	?	PALETTE1:
+			({COCO,BP,CRES[0],CHARACTER4[6],CHAR_LATCH_1[10:8]}== 7'b0010010)	?	PALETTE2:
+			({COCO,BP,CRES[0],CHARACTER4[6],CHAR_LATCH_1[10:8]}== 7'b0010011)	?	PALETTE3:
+			({COCO,BP,CRES[0],CHARACTER4[6],CHAR_LATCH_1[10:8]}== 7'b0010100)	?	PALETTE4:
+			({COCO,BP,CRES[0],CHARACTER4[6],CHAR_LATCH_1[10:8]}== 7'b0010101)	?	PALETTE5:
+			({COCO,BP,CRES[0],CHARACTER4[6],CHAR_LATCH_1[10:8]}== 7'b0010110)	?	PALETTE6:
+			({COCO,BP,CRES[0],CHARACTER4[6],CHAR_LATCH_1[10:8]}== 7'b0010111)	?	PALETTE7:
+// XTEXT
+			({COCO,BP,CRES[0],CHARACTER1[6]}==4'b0001)							?	PALETTEC:
+			({COCO,BP,CRES[0],CHARACTER1[6]}==4'b0000)							?	PALETTED:
+// Hires GR
+// 2 color
+			({COCO,BP,CRES,CHAR_LATCH_0[14]} == 5'b01000)							?	PALETTE0:
+			({COCO,BP,CRES,CHAR_LATCH_0[14]} == 5'b01001)							?	PALETTE1:
+// 4 Color
+			({COCO,BP,CRES,CHAR_LATCH_1[5:4]} == 6'b010100)						?	PALETTE0:
+			({COCO,BP,CRES,CHAR_LATCH_1[5:4]} == 6'b010101)						?	PALETTE1:
+			({COCO,BP,CRES,CHAR_LATCH_1[5:4]} == 6'b010110)						?	PALETTE2:
+			({COCO,BP,CRES,CHAR_LATCH_1[5:4]} == 6'b010111)						?	PALETTE3:
+// 16 color
+			({COCO,BP,CRES,CHAR_LATCH_2[3:0]} == 8'b01100000)						?	PALETTE0:
+			({COCO,BP,CRES,CHAR_LATCH_2[3:0]} == 8'b01100001)						?	PALETTE1:
+			({COCO,BP,CRES,CHAR_LATCH_2[3:0]} == 8'b01100010)						?	PALETTE2:
+			({COCO,BP,CRES,CHAR_LATCH_2[3:0]} == 8'b01100011)						?	PALETTE3:
+			({COCO,BP,CRES,CHAR_LATCH_2[3:0]} == 8'b01100100)						?	PALETTE4:
+			({COCO,BP,CRES,CHAR_LATCH_2[3:0]} == 8'b01100101)						?	PALETTE5:
+			({COCO,BP,CRES,CHAR_LATCH_2[3:0]} == 8'b01100110)						?	PALETTE6:
+			({COCO,BP,CRES,CHAR_LATCH_2[3:0]} == 8'b01100111)						?	PALETTE7:
+			({COCO,BP,CRES,CHAR_LATCH_2[3:0]} == 8'b01101000)						?	PALETTE8:
+			({COCO,BP,CRES,CHAR_LATCH_2[3:0]} == 8'b01101001)						?	PALETTE9:
+			({COCO,BP,CRES,CHAR_LATCH_2[3:0]} == 8'b01101010)						?	PALETTEA:
+			({COCO,BP,CRES,CHAR_LATCH_2[3:0]} == 8'b01101011)						?	PALETTEB:
+			({COCO,BP,CRES,CHAR_LATCH_2[3:0]} == 8'b01101100)						?	PALETTEC:
+			({COCO,BP,CRES,CHAR_LATCH_2[3:0]} == 8'b01101101)						?	PALETTED:
+			({COCO,BP,CRES,CHAR_LATCH_2[3:0]} == 8'b01101110)						?	PALETTEE:
+			({COCO,BP,CRES,CHAR_LATCH_2[3:0]} == 8'b01101111)						?	PALETTEF:
+// 256 color mode
+`ifndef NEW_SRAM
+			({COCO,BP,CRES} == 4'b0111)													?	CHAR_LATCH_4[11:8]:
+`endif
+																										PALETTE8;
+assign PIXEL19 =
+`ifndef NEW_SRAM
+			({COCO,BP,CRES} == 4'b0111)													?	CHAR_LATCH_4[15:12]:
+`endif
+																										4'h0;
+
+assign PIXELA =
+// HR Text
+			({COCO,BP,CRES[0],CHARACTER4[5],CHAR_LATCH_1[13:11]}==7'b0011000)	?	PALETTE8:
+			({COCO,BP,CRES[0],CHARACTER4[5],CHAR_LATCH_1[13:11]}==7'b0011001)	?	PALETTE9:
+			({COCO,BP,CRES[0],CHARACTER4[5],CHAR_LATCH_1[13:11]}==7'b0011010)	?	PALETTEA:
+			({COCO,BP,CRES[0],CHARACTER4[5],CHAR_LATCH_1[13:11]}==7'b0011011)	?	PALETTEB:
+			({COCO,BP,CRES[0],CHARACTER4[5],CHAR_LATCH_1[13:11]}==7'b0011100)	?	PALETTEC:
+			({COCO,BP,CRES[0],CHARACTER4[5],CHAR_LATCH_1[13:11]}==7'b0011101)	?	PALETTED:
+			({COCO,BP,CRES[0],CHARACTER4[5],CHAR_LATCH_1[13:11]}==7'b0011110)	?	PALETTEE:
+			({COCO,BP,CRES[0],CHARACTER4[5],CHAR_LATCH_1[13:11]}==7'b0011111)	?	PALETTEF:
+			({COCO,BP,CRES[0],CHARACTER4[5],CHAR_LATCH_1[10:8]}== 7'b0010000)	?	PALETTE0:
+			({COCO,BP,CRES[0],CHARACTER4[5],CHAR_LATCH_1[10:8]}== 7'b0010001)	?	PALETTE1:
+			({COCO,BP,CRES[0],CHARACTER4[5],CHAR_LATCH_1[10:8]}== 7'b0010010)	?	PALETTE2:
+			({COCO,BP,CRES[0],CHARACTER4[5],CHAR_LATCH_1[10:8]}== 7'b0010011)	?	PALETTE3:
+			({COCO,BP,CRES[0],CHARACTER4[5],CHAR_LATCH_1[10:8]}== 7'b0010100)	?	PALETTE4:
+			({COCO,BP,CRES[0],CHARACTER4[5],CHAR_LATCH_1[10:8]}== 7'b0010101)	?	PALETTE5:
+			({COCO,BP,CRES[0],CHARACTER4[5],CHAR_LATCH_1[10:8]}== 7'b0010110)	?	PALETTE6:
+			({COCO,BP,CRES[0],CHARACTER4[5],CHAR_LATCH_1[10:8]}== 7'b0010111)	?	PALETTE7:
+// XTEXT
+			({COCO,BP,CRES[0],CHARACTER1[5]}==4'b0001)							?	PALETTEC:
+			({COCO,BP,CRES[0],CHARACTER1[5]}==4'b0000)							?	PALETTED:
+// Hires GR
+// 2 color
+			({COCO,BP,CRES,CHAR_LATCH_0[13]} == 5'b01000)							?	PALETTE0:
+			({COCO,BP,CRES,CHAR_LATCH_0[13]} == 5'b01001)							?	PALETTE1:
+// 4 Color
+			({COCO,BP,CRES,CHAR_LATCH_1[3:2]} == 6'b010100)						?	PALETTE0:
+			({COCO,BP,CRES,CHAR_LATCH_1[3:2]} == 6'b010101)						?	PALETTE1:
+			({COCO,BP,CRES,CHAR_LATCH_1[3:2]} == 6'b010110)						?	PALETTE2:
+			({COCO,BP,CRES,CHAR_LATCH_1[3:2]} == 6'b010111)						?	PALETTE3:
+// 16 color
+			({COCO,BP,CRES,CHAR_LATCH_2[15:12]} == 8'b01100000)						?	PALETTE0:
+			({COCO,BP,CRES,CHAR_LATCH_2[15:12]} == 8'b01100001)						?	PALETTE1:
+			({COCO,BP,CRES,CHAR_LATCH_2[15:12]} == 8'b01100010)						?	PALETTE2:
+			({COCO,BP,CRES,CHAR_LATCH_2[15:12]} == 8'b01100011)						?	PALETTE3:
+			({COCO,BP,CRES,CHAR_LATCH_2[15:12]} == 8'b01100100)						?	PALETTE4:
+			({COCO,BP,CRES,CHAR_LATCH_2[15:12]} == 8'b01100101)						?	PALETTE5:
+			({COCO,BP,CRES,CHAR_LATCH_2[15:12]} == 8'b01100110)						?	PALETTE6:
+			({COCO,BP,CRES,CHAR_LATCH_2[15:12]} == 8'b01100111)						?	PALETTE7:
+			({COCO,BP,CRES,CHAR_LATCH_2[15:12]} == 8'b01101000)						?	PALETTE8:
+			({COCO,BP,CRES,CHAR_LATCH_2[15:12]} == 8'b01101001)						?	PALETTE9:
+			({COCO,BP,CRES,CHAR_LATCH_2[15:12]} == 8'b01101010)						?	PALETTEA:
+			({COCO,BP,CRES,CHAR_LATCH_2[15:12]} == 8'b01101011)						?	PALETTEB:
+			({COCO,BP,CRES,CHAR_LATCH_2[15:12]} == 8'b01101100)						?	PALETTEC:
+			({COCO,BP,CRES,CHAR_LATCH_2[15:12]} == 8'b01101101)						?	PALETTED:
+			({COCO,BP,CRES,CHAR_LATCH_2[15:12]} == 8'b01101110)						?	PALETTEE:
+			({COCO,BP,CRES,CHAR_LATCH_2[15:12]} == 8'b01101111)						?	PALETTEF:
+// 256 color mode
+`ifndef NEW_SRAM
+			({COCO,BP,CRES} == 4'b0111)													?	CHAR_LATCH_5[3:0]:
+`endif
+																										PALETTE8;
+assign PIXEL1A =
+`ifndef NEW_SRAM
+			({COCO,BP,CRES} == 4'b0111)													?	CHAR_LATCH_5[7:4]:
+`endif
+																										4'h0;
+
+assign PIXELB =
+// HR Text
+			({COCO,BP,CRES[0],CHARACTER4[4],CHAR_LATCH_1[13:11]}==7'b0011000)	?	PALETTE8:
+			({COCO,BP,CRES[0],CHARACTER4[4],CHAR_LATCH_1[13:11]}==7'b0011001)	?	PALETTE9:
+			({COCO,BP,CRES[0],CHARACTER4[4],CHAR_LATCH_1[13:11]}==7'b0011010)	?	PALETTEA:
+			({COCO,BP,CRES[0],CHARACTER4[4],CHAR_LATCH_1[13:11]}==7'b0011011)	?	PALETTEB:
+			({COCO,BP,CRES[0],CHARACTER4[4],CHAR_LATCH_1[13:11]}==7'b0011100)	?	PALETTEC:
+			({COCO,BP,CRES[0],CHARACTER4[4],CHAR_LATCH_1[13:11]}==7'b0011101)	?	PALETTED:
+			({COCO,BP,CRES[0],CHARACTER4[4],CHAR_LATCH_1[13:11]}==7'b0011110)	?	PALETTEE:
+			({COCO,BP,CRES[0],CHARACTER4[4],CHAR_LATCH_1[13:11]}==7'b0011111)	?	PALETTEF:
+			({COCO,BP,CRES[0],CHARACTER4[4],CHAR_LATCH_1[10:8]}== 7'b0010000)	?	PALETTE0:
+			({COCO,BP,CRES[0],CHARACTER4[4],CHAR_LATCH_1[10:8]}== 7'b0010001)	?	PALETTE1:
+			({COCO,BP,CRES[0],CHARACTER4[4],CHAR_LATCH_1[10:8]}== 7'b0010010)	?	PALETTE2:
+			({COCO,BP,CRES[0],CHARACTER4[4],CHAR_LATCH_1[10:8]}== 7'b0010011)	?	PALETTE3:
+			({COCO,BP,CRES[0],CHARACTER4[4],CHAR_LATCH_1[10:8]}== 7'b0010100)	?	PALETTE4:
+			({COCO,BP,CRES[0],CHARACTER4[4],CHAR_LATCH_1[10:8]}== 7'b0010101)	?	PALETTE5:
+			({COCO,BP,CRES[0],CHARACTER4[4],CHAR_LATCH_1[10:8]}== 7'b0010110)	?	PALETTE6:
+			({COCO,BP,CRES[0],CHARACTER4[4],CHAR_LATCH_1[10:8]}== 7'b0010111)	?	PALETTE7:
+// XTEXT
+			({COCO,BP,CRES[0],CHARACTER1[4]}==4'b0001)							?	PALETTEC:
+			({COCO,BP,CRES[0],CHARACTER1[4]}==4'b0000)							?	PALETTED:
+// Hires GR
+// 2 color
+			({COCO,BP,CRES,CHAR_LATCH_0[12]} == 5'b01000)							?	PALETTE0:
+			({COCO,BP,CRES,CHAR_LATCH_0[12]} == 5'b01001)							?	PALETTE1:
+// 4 Color
+			({COCO,BP,CRES,CHAR_LATCH_1[1:0]} == 6'b010100)						?	PALETTE0:
+			({COCO,BP,CRES,CHAR_LATCH_1[1:0]} == 6'b010101)						?	PALETTE1:
+			({COCO,BP,CRES,CHAR_LATCH_1[1:0]} == 6'b010110)						?	PALETTE2:
+			({COCO,BP,CRES,CHAR_LATCH_1[1:0]} == 6'b010111)						?	PALETTE3:
+// 16 color
+			({COCO,BP,CRES,CHAR_LATCH_2[11:8]} == 8'b01100000)						?	PALETTE0:
+			({COCO,BP,CRES,CHAR_LATCH_2[11:8]} == 8'b01100001)						?	PALETTE1:
+			({COCO,BP,CRES,CHAR_LATCH_2[11:8]} == 8'b01100010)						?	PALETTE2:
+			({COCO,BP,CRES,CHAR_LATCH_2[11:8]} == 8'b01100011)						?	PALETTE3:
+			({COCO,BP,CRES,CHAR_LATCH_2[11:8]} == 8'b01100100)						?	PALETTE4:
+			({COCO,BP,CRES,CHAR_LATCH_2[11:8]} == 8'b01100101)						?	PALETTE5:
+			({COCO,BP,CRES,CHAR_LATCH_2[11:8]} == 8'b01100110)						?	PALETTE6:
+			({COCO,BP,CRES,CHAR_LATCH_2[11:8]} == 8'b01100111)						?	PALETTE7:
+			({COCO,BP,CRES,CHAR_LATCH_2[11:8]} == 8'b01101000)						?	PALETTE8:
+			({COCO,BP,CRES,CHAR_LATCH_2[11:8]} == 8'b01101001)						?	PALETTE9:
+			({COCO,BP,CRES,CHAR_LATCH_2[11:8]} == 8'b01101010)						?	PALETTEA:
+			({COCO,BP,CRES,CHAR_LATCH_2[11:8]} == 8'b01101011)						?	PALETTEB:
+			({COCO,BP,CRES,CHAR_LATCH_2[11:8]} == 8'b01101100)						?	PALETTEC:
+			({COCO,BP,CRES,CHAR_LATCH_2[11:8]} == 8'b01101101)						?	PALETTED:
+			({COCO,BP,CRES,CHAR_LATCH_2[11:8]} == 8'b01101110)						?	PALETTEE:
+			({COCO,BP,CRES,CHAR_LATCH_2[11:8]} == 8'b01101111)						?	PALETTEF:
+// 256 color mode
+`ifndef NEW_SRAM
+			({COCO,BP,CRES} == 4'b0111)													?	CHAR_LATCH_5[11:8]:
+`endif
+																										PALETTE8;
+assign PIXEL1B =
+`ifndef NEW_SRAM
+			({COCO,BP,CRES} == 4'b0111)													?	CHAR_LATCH_5[15:12]:
+`endif
+																										4'h0;
+
+assign PIXELC =
+// HR Text
+			({COCO,BP,CRES[0],CHARACTER4[3],CHAR_LATCH_1[13:11]}==7'b0011000)	?	PALETTE8:
+			({COCO,BP,CRES[0],CHARACTER4[3],CHAR_LATCH_1[13:11]}==7'b0011001)	?	PALETTE9:
+			({COCO,BP,CRES[0],CHARACTER4[3],CHAR_LATCH_1[13:11]}==7'b0011010)	?	PALETTEA:
+			({COCO,BP,CRES[0],CHARACTER4[3],CHAR_LATCH_1[13:11]}==7'b0011011)	?	PALETTEB:
+			({COCO,BP,CRES[0],CHARACTER4[3],CHAR_LATCH_1[13:11]}==7'b0011100)	?	PALETTEC:
+			({COCO,BP,CRES[0],CHARACTER4[3],CHAR_LATCH_1[13:11]}==7'b0011101)	?	PALETTED:
+			({COCO,BP,CRES[0],CHARACTER4[3],CHAR_LATCH_1[13:11]}==7'b0011110)	?	PALETTEE:
+			({COCO,BP,CRES[0],CHARACTER4[3],CHAR_LATCH_1[13:11]}==7'b0011111)	?	PALETTEF:
+			({COCO,BP,CRES[0],CHARACTER4[3],CHAR_LATCH_1[10:8]}== 7'b0010000)	?	PALETTE0:
+			({COCO,BP,CRES[0],CHARACTER4[3],CHAR_LATCH_1[10:8]}== 7'b0010001)	?	PALETTE1:
+			({COCO,BP,CRES[0],CHARACTER4[3],CHAR_LATCH_1[10:8]}== 7'b0010010)	?	PALETTE2:
+			({COCO,BP,CRES[0],CHARACTER4[3],CHAR_LATCH_1[10:8]}== 7'b0010011)	?	PALETTE3:
+			({COCO,BP,CRES[0],CHARACTER4[3],CHAR_LATCH_1[10:8]}== 7'b0010100)	?	PALETTE4:
+			({COCO,BP,CRES[0],CHARACTER4[3],CHAR_LATCH_1[10:8]}== 7'b0010101)	?	PALETTE5:
+			({COCO,BP,CRES[0],CHARACTER4[3],CHAR_LATCH_1[10:8]}== 7'b0010110)	?	PALETTE6:
+			({COCO,BP,CRES[0],CHARACTER4[3],CHAR_LATCH_1[10:8]}== 7'b0010111)	?	PALETTE7:
+// XTEXT
+			({COCO,BP,CRES[0],CHARACTER1[3]}==4'b0001)							?	PALETTEC:
+			({COCO,BP,CRES[0],CHARACTER1[3]}==4'b0000)							?	PALETTED:
+// Hires GR
+// 2 color
+			({COCO,BP,CRES,CHAR_LATCH_0[11]} == 5'b01000)							?	PALETTE0:
+			({COCO,BP,CRES,CHAR_LATCH_0[11]} == 5'b01001)							?	PALETTE1:
+// 4 Color
+			({COCO,BP,CRES,CHAR_LATCH_1[15:14]} == 6'b010100)						?	PALETTE0:
+			({COCO,BP,CRES,CHAR_LATCH_1[15:14]} == 6'b010101)						?	PALETTE1:
+			({COCO,BP,CRES,CHAR_LATCH_1[15:14]} == 6'b010110)						?	PALETTE2:
+			({COCO,BP,CRES,CHAR_LATCH_1[15:14]} == 6'b010111)						?	PALETTE3:
+// 16 color
+			({COCO,BP,CRES,CHAR_LATCH_3[7:4]} == 8'b01100000)						?	PALETTE0:
+			({COCO,BP,CRES,CHAR_LATCH_3[7:4]} == 8'b01100001)						?	PALETTE1:
+			({COCO,BP,CRES,CHAR_LATCH_3[7:4]} == 8'b01100010)						?	PALETTE2:
+			({COCO,BP,CRES,CHAR_LATCH_3[7:4]} == 8'b01100011)						?	PALETTE3:
+			({COCO,BP,CRES,CHAR_LATCH_3[7:4]} == 8'b01100100)						?	PALETTE4:
+			({COCO,BP,CRES,CHAR_LATCH_3[7:4]} == 8'b01100101)						?	PALETTE5:
+			({COCO,BP,CRES,CHAR_LATCH_3[7:4]} == 8'b01100110)						?	PALETTE6:
+			({COCO,BP,CRES,CHAR_LATCH_3[7:4]} == 8'b01100111)						?	PALETTE7:
+			({COCO,BP,CRES,CHAR_LATCH_3[7:4]} == 8'b01101000)						?	PALETTE8:
+			({COCO,BP,CRES,CHAR_LATCH_3[7:4]} == 8'b01101001)						?	PALETTE9:
+			({COCO,BP,CRES,CHAR_LATCH_3[7:4]} == 8'b01101010)						?	PALETTEA:
+			({COCO,BP,CRES,CHAR_LATCH_3[7:4]} == 8'b01101011)						?	PALETTEB:
+			({COCO,BP,CRES,CHAR_LATCH_3[7:4]} == 8'b01101100)						?	PALETTEC:
+			({COCO,BP,CRES,CHAR_LATCH_3[7:4]} == 8'b01101101)						?	PALETTED:
+			({COCO,BP,CRES,CHAR_LATCH_3[7:4]} == 8'b01101110)						?	PALETTEE:
+			({COCO,BP,CRES,CHAR_LATCH_3[7:4]} == 8'b01101111)						?	PALETTEF:
+// 256 color mode
+`ifndef NEW_SRAM
+			({COCO,BP,CRES} == 4'b0111)													?	CHAR_LATCH_6[3:0]:
+`endif
+																										PALETTE8;
+assign PIXEL1C =
+`ifndef NEW_SRAM
+			({COCO,BP,CRES} == 4'b0111)													?	CHAR_LATCH_6[7:4]:
+`endif
+																										4'h0;
+
+assign PIXELD =
+// HR Text
+			({COCO,BP,CRES[0],CHARACTER4[2],CHAR_LATCH_1[13:11]}==7'b0011000)	?	PALETTE8:
+			({COCO,BP,CRES[0],CHARACTER4[2],CHAR_LATCH_1[13:11]}==7'b0011001)	?	PALETTE9:
+			({COCO,BP,CRES[0],CHARACTER4[2],CHAR_LATCH_1[13:11]}==7'b0011010)	?	PALETTEA:
+			({COCO,BP,CRES[0],CHARACTER4[2],CHAR_LATCH_1[13:11]}==7'b0011011)	?	PALETTEB:
+			({COCO,BP,CRES[0],CHARACTER4[2],CHAR_LATCH_1[13:11]}==7'b0011100)	?	PALETTEC:
+			({COCO,BP,CRES[0],CHARACTER4[2],CHAR_LATCH_1[13:11]}==7'b0011101)	?	PALETTED:
+			({COCO,BP,CRES[0],CHARACTER4[2],CHAR_LATCH_1[13:11]}==7'b0011110)	?	PALETTEE:
+			({COCO,BP,CRES[0],CHARACTER4[2],CHAR_LATCH_1[13:11]}==7'b0011111)	?	PALETTEF:
+			({COCO,BP,CRES[0],CHARACTER4[2],CHAR_LATCH_1[10:8]}== 7'b0010000)	?	PALETTE0:
+			({COCO,BP,CRES[0],CHARACTER4[2],CHAR_LATCH_1[10:8]}== 7'b0010001)	?	PALETTE1:
+			({COCO,BP,CRES[0],CHARACTER4[2],CHAR_LATCH_1[10:8]}== 7'b0010010)	?	PALETTE2:
+			({COCO,BP,CRES[0],CHARACTER4[2],CHAR_LATCH_1[10:8]}== 7'b0010011)	?	PALETTE3:
+			({COCO,BP,CRES[0],CHARACTER4[2],CHAR_LATCH_1[10:8]}== 7'b0010100)	?	PALETTE4:
+			({COCO,BP,CRES[0],CHARACTER4[2],CHAR_LATCH_1[10:8]}== 7'b0010101)	?	PALETTE5:
+			({COCO,BP,CRES[0],CHARACTER4[2],CHAR_LATCH_1[10:8]}== 7'b0010110)	?	PALETTE6:
+			({COCO,BP,CRES[0],CHARACTER4[2],CHAR_LATCH_1[10:8]}== 7'b0010111)	?	PALETTE7:
+// XTEXT
+			({COCO,BP,CRES[0],CHARACTER1[2]}==4'b0001)							?	PALETTEC:
+			({COCO,BP,CRES[0],CHARACTER1[2]}==4'b0000)							?	PALETTED:
+// Hires GR
+// 2 color
+			({COCO,BP,CRES,CHAR_LATCH_0[10]} == 5'b01000)							?	PALETTE0:
+			({COCO,BP,CRES,CHAR_LATCH_0[10]} == 5'b01001)							?	PALETTE1:
+// 4 Color
+			({COCO,BP,CRES,CHAR_LATCH_1[13:12]} == 6'b010100)						?	PALETTE0:
+			({COCO,BP,CRES,CHAR_LATCH_1[13:12]} == 6'b010101)						?	PALETTE1:
+			({COCO,BP,CRES,CHAR_LATCH_1[13:12]} == 6'b010110)						?	PALETTE2:
+			({COCO,BP,CRES,CHAR_LATCH_1[13:12]} == 6'b010111)						?	PALETTE3:
+// 16 color
+			({COCO,BP,CRES,CHAR_LATCH_3[3:0]} == 8'b01100000)						?	PALETTE0:
+			({COCO,BP,CRES,CHAR_LATCH_3[3:0]} == 8'b01100001)						?	PALETTE1:
+			({COCO,BP,CRES,CHAR_LATCH_3[3:0]} == 8'b01100010)						?	PALETTE2:
+			({COCO,BP,CRES,CHAR_LATCH_3[3:0]} == 8'b01100011)						?	PALETTE3:
+			({COCO,BP,CRES,CHAR_LATCH_3[3:0]} == 8'b01100100)						?	PALETTE4:
+			({COCO,BP,CRES,CHAR_LATCH_3[3:0]} == 8'b01100101)						?	PALETTE5:
+			({COCO,BP,CRES,CHAR_LATCH_3[3:0]} == 8'b01100110)						?	PALETTE6:
+			({COCO,BP,CRES,CHAR_LATCH_3[3:0]} == 8'b01100111)						?	PALETTE7:
+			({COCO,BP,CRES,CHAR_LATCH_3[3:0]} == 8'b01101000)						?	PALETTE8:
+			({COCO,BP,CRES,CHAR_LATCH_3[3:0]} == 8'b01101001)						?	PALETTE9:
+			({COCO,BP,CRES,CHAR_LATCH_3[3:0]} == 8'b01101010)						?	PALETTEA:
+			({COCO,BP,CRES,CHAR_LATCH_3[3:0]} == 8'b01101011)						?	PALETTEB:
+			({COCO,BP,CRES,CHAR_LATCH_3[3:0]} == 8'b01101100)						?	PALETTEC:
+			({COCO,BP,CRES,CHAR_LATCH_3[3:0]} == 8'b01101101)						?	PALETTED:
+			({COCO,BP,CRES,CHAR_LATCH_3[3:0]} == 8'b01101110)						?	PALETTEE:
+			({COCO,BP,CRES,CHAR_LATCH_3[3:0]} == 8'b01101111)						?	PALETTEF:
+// 256 color mode
+`ifndef NEW_SRAM
+			({COCO,BP,CRES} == 4'b0111)													?	CHAR_LATCH_6[11:8]:
+`endif
+																										PALETTE8;
+
+assign PIXEL1D =
+`ifndef NEW_SRAM
+			({COCO,BP,CRES} == 4'b0111)													?	CHAR_LATCH_6[15:12]:
+`endif
+																										4'h0;
+
+assign PIXELE =
+// HR Text
+			({COCO,BP,CRES[0],CHARACTER4[1],CHAR_LATCH_1[13:11]}==7'b0011000)	?	PALETTE8:
+			({COCO,BP,CRES[0],CHARACTER4[1],CHAR_LATCH_1[13:11]}==7'b0011001)	?	PALETTE9:
+			({COCO,BP,CRES[0],CHARACTER4[1],CHAR_LATCH_1[13:11]}==7'b0011010)	?	PALETTEA:
+			({COCO,BP,CRES[0],CHARACTER4[1],CHAR_LATCH_1[13:11]}==7'b0011011)	?	PALETTEB:
+			({COCO,BP,CRES[0],CHARACTER4[1],CHAR_LATCH_1[13:11]}==7'b0011100)	?	PALETTEC:
+			({COCO,BP,CRES[0],CHARACTER4[1],CHAR_LATCH_1[13:11]}==7'b0011101)	?	PALETTED:
+			({COCO,BP,CRES[0],CHARACTER4[1],CHAR_LATCH_1[13:11]}==7'b0011110)	?	PALETTEE:
+			({COCO,BP,CRES[0],CHARACTER4[1],CHAR_LATCH_1[13:11]}==7'b0011111)	?	PALETTEF:
+			({COCO,BP,CRES[0],CHARACTER4[1],CHAR_LATCH_1[10:8]}== 7'b0010000)	?	PALETTE0:
+			({COCO,BP,CRES[0],CHARACTER4[1],CHAR_LATCH_1[10:8]}== 7'b0010001)	?	PALETTE1:
+			({COCO,BP,CRES[0],CHARACTER4[1],CHAR_LATCH_1[10:8]}== 7'b0010010)	?	PALETTE2:
+			({COCO,BP,CRES[0],CHARACTER4[1],CHAR_LATCH_1[10:8]}== 7'b0010011)	?	PALETTE3:
+			({COCO,BP,CRES[0],CHARACTER4[1],CHAR_LATCH_1[10:8]}== 7'b0010100)	?	PALETTE4:
+			({COCO,BP,CRES[0],CHARACTER4[1],CHAR_LATCH_1[10:8]}== 7'b0010101)	?	PALETTE5:
+			({COCO,BP,CRES[0],CHARACTER4[1],CHAR_LATCH_1[10:8]}== 7'b0010110)	?	PALETTE6:
+			({COCO,BP,CRES[0],CHARACTER4[1],CHAR_LATCH_1[10:8]}== 7'b0010111)	?	PALETTE7:
+// XTEXT
+			({COCO,BP,CRES[0],CHARACTER1[1]}==4'b0001)							?	PALETTEC:
+			({COCO,BP,CRES[0],CHARACTER1[1]}==4'b0000)							?	PALETTED:
+// Hires GR
+// 2 color
+			({COCO,BP,CRES,CHAR_LATCH_0[9]} == 5'b01000)							?	PALETTE0:
+			({COCO,BP,CRES,CHAR_LATCH_0[9]} == 5'b01001)							?	PALETTE1:
+// 4 Color
+			({COCO,BP,CRES,CHAR_LATCH_1[11:10]} == 6'b010100)						?	PALETTE0:
+			({COCO,BP,CRES,CHAR_LATCH_1[11:10]} == 6'b010101)						?	PALETTE1:
+			({COCO,BP,CRES,CHAR_LATCH_1[11:10]} == 6'b010110)						?	PALETTE2:
+			({COCO,BP,CRES,CHAR_LATCH_1[11:10]} == 6'b010111)						?	PALETTE3:
+// 16 color
+			({COCO,BP,CRES,CHAR_LATCH_3[15:12]} == 8'b01100000)						?	PALETTE0:
+			({COCO,BP,CRES,CHAR_LATCH_3[15:12]} == 8'b01100001)						?	PALETTE1:
+			({COCO,BP,CRES,CHAR_LATCH_3[15:12]} == 8'b01100010)						?	PALETTE2:
+			({COCO,BP,CRES,CHAR_LATCH_3[15:12]} == 8'b01100011)						?	PALETTE3:
+			({COCO,BP,CRES,CHAR_LATCH_3[15:12]} == 8'b01100100)						?	PALETTE4:
+			({COCO,BP,CRES,CHAR_LATCH_3[15:12]} == 8'b01100101)						?	PALETTE5:
+			({COCO,BP,CRES,CHAR_LATCH_3[15:12]} == 8'b01100110)						?	PALETTE6:
+			({COCO,BP,CRES,CHAR_LATCH_3[15:12]} == 8'b01100111)						?	PALETTE7:
+			({COCO,BP,CRES,CHAR_LATCH_3[15:12]} == 8'b01101000)						?	PALETTE8:
+			({COCO,BP,CRES,CHAR_LATCH_3[15:12]} == 8'b01101001)						?	PALETTE9:
+			({COCO,BP,CRES,CHAR_LATCH_3[15:12]} == 8'b01101010)						?	PALETTEA:
+			({COCO,BP,CRES,CHAR_LATCH_3[15:12]} == 8'b01101011)						?	PALETTEB:
+			({COCO,BP,CRES,CHAR_LATCH_3[15:12]} == 8'b01101100)						?	PALETTEC:
+			({COCO,BP,CRES,CHAR_LATCH_3[15:12]} == 8'b01101101)						?	PALETTED:
+			({COCO,BP,CRES,CHAR_LATCH_3[15:12]} == 8'b01101110)						?	PALETTEE:
+			({COCO,BP,CRES,CHAR_LATCH_3[15:12]} == 8'b01101111)						?	PALETTEF:
+// 256 color mode
+`ifndef NEW_SRAM
+			({COCO,BP,CRES} == 4'b0111)													?	CHAR_LATCH_7[3:0]:
+`endif
+																										PALETTE8;
+
+assign PIXEL1E =
+`ifndef NEW_SRAM
+			({COCO,BP,CRES} == 4'b0111)													?	CHAR_LATCH_7[7:4]:
+`endif
+																										4'h0;
+
+assign PIXELF =
+// HR Text
+			({COCO,BP,CRES[0],CHARACTER4[0],CHAR_LATCH_1[13:11]}==7'b0011000)	?	PALETTE8:
+			({COCO,BP,CRES[0],CHARACTER4[0],CHAR_LATCH_1[13:11]}==7'b0011001)	?	PALETTE9:
+			({COCO,BP,CRES[0],CHARACTER4[0],CHAR_LATCH_1[13:11]}==7'b0011010)	?	PALETTEA:
+			({COCO,BP,CRES[0],CHARACTER4[0],CHAR_LATCH_1[13:11]}==7'b0011011)	?	PALETTEB:
+			({COCO,BP,CRES[0],CHARACTER4[0],CHAR_LATCH_1[13:11]}==7'b0011100)	?	PALETTEC:
+			({COCO,BP,CRES[0],CHARACTER4[0],CHAR_LATCH_1[13:11]}==7'b0011101)	?	PALETTED:
+			({COCO,BP,CRES[0],CHARACTER4[0],CHAR_LATCH_1[13:11]}==7'b0011110)	?	PALETTEE:
+			({COCO,BP,CRES[0],CHARACTER4[0],CHAR_LATCH_1[13:11]}==7'b0011111)	?	PALETTEF:
+			({COCO,BP,CRES[0],CHARACTER4[0],CHAR_LATCH_1[10:8]}== 7'b0010000)	?	PALETTE0:
+			({COCO,BP,CRES[0],CHARACTER4[0],CHAR_LATCH_1[10:8]}== 7'b0010001)	?	PALETTE1:
+			({COCO,BP,CRES[0],CHARACTER4[0],CHAR_LATCH_1[10:8]}== 7'b0010010)	?	PALETTE2:
+			({COCO,BP,CRES[0],CHARACTER4[0],CHAR_LATCH_1[10:8]}== 7'b0010011)	?	PALETTE3:
+			({COCO,BP,CRES[0],CHARACTER4[0],CHAR_LATCH_1[10:8]}== 7'b0010100)	?	PALETTE4:
+			({COCO,BP,CRES[0],CHARACTER4[0],CHAR_LATCH_1[10:8]}== 7'b0010101)	?	PALETTE5:
+			({COCO,BP,CRES[0],CHARACTER4[0],CHAR_LATCH_1[10:8]}== 7'b0010110)	?	PALETTE6:
+			({COCO,BP,CRES[0],CHARACTER4[0],CHAR_LATCH_1[10:8]}== 7'b0010111)	?	PALETTE7:
+// XTEXT
+			({COCO,BP,CRES[0],CHARACTER1[0]}==4'b0001)							?	PALETTEC:
+			({COCO,BP,CRES[0],CHARACTER1[0]}==4'b0000)							?	PALETTED:
+// Hires GR
+// 2 color
+			({COCO,BP,CRES,CHAR_LATCH_0[8]} == 5'b01000)							?	PALETTE0:
+			({COCO,BP,CRES,CHAR_LATCH_0[8]} == 5'b01001)							?	PALETTE1:
+// 4 Color
+			({COCO,BP,CRES,CHAR_LATCH_1[9:8]} == 6'b010100)						?	PALETTE0:
+			({COCO,BP,CRES,CHAR_LATCH_1[9:8]} == 6'b010101)						?	PALETTE1:
+			({COCO,BP,CRES,CHAR_LATCH_1[9:8]} == 6'b010110)						?	PALETTE2:
+			({COCO,BP,CRES,CHAR_LATCH_1[9:8]} == 6'b010111)						?	PALETTE3:
+// 16 color
+			({COCO,BP,CRES,CHAR_LATCH_3[11:8]} == 8'b01100000)						?	PALETTE0:
+			({COCO,BP,CRES,CHAR_LATCH_3[11:8]} == 8'b01100001)						?	PALETTE1:
+			({COCO,BP,CRES,CHAR_LATCH_3[11:8]} == 8'b01100010)						?	PALETTE2:
+			({COCO,BP,CRES,CHAR_LATCH_3[11:8]} == 8'b01100011)						?	PALETTE3:
+			({COCO,BP,CRES,CHAR_LATCH_3[11:8]} == 8'b01100100)						?	PALETTE4:
+			({COCO,BP,CRES,CHAR_LATCH_3[11:8]} == 8'b01100101)						?	PALETTE5:
+			({COCO,BP,CRES,CHAR_LATCH_3[11:8]} == 8'b01100110)						?	PALETTE6:
+			({COCO,BP,CRES,CHAR_LATCH_3[11:8]} == 8'b01100111)						?	PALETTE7:
+			({COCO,BP,CRES,CHAR_LATCH_3[11:8]} == 8'b01101000)						?	PALETTE8:
+			({COCO,BP,CRES,CHAR_LATCH_3[11:8]} == 8'b01101001)						?	PALETTE9:
+			({COCO,BP,CRES,CHAR_LATCH_3[11:8]} == 8'b01101010)						?	PALETTEA:
+			({COCO,BP,CRES,CHAR_LATCH_3[11:8]} == 8'b01101011)						?	PALETTEB:
+			({COCO,BP,CRES,CHAR_LATCH_3[11:8]} == 8'b01101100)						?	PALETTEC:
+			({COCO,BP,CRES,CHAR_LATCH_3[11:8]} == 8'b01101101)						?	PALETTED:
+			({COCO,BP,CRES,CHAR_LATCH_3[11:8]} == 8'b01101110)						?	PALETTEE:
+			({COCO,BP,CRES,CHAR_LATCH_3[11:8]} == 8'b01101111)						?	PALETTEF:
+// 256 color mode
+`ifndef NEW_SRAM
+			({COCO,BP,CRES} == 4'b0111)													?	CHAR_LATCH_7[11:8]:
+`endif
+																										PALETTE8;
+assign PIXEL1F =
+`ifndef NEW_SRAM
+			({COCO,BP,CRES} == 4'b0111)													?	CHAR_LATCH_7[15:12]:
+`endif
+																										4'h0;
+
+/*****************************************************************************
+* Generate RGB
+******************************************************************************/
+assign PIXEL_ORDER =
+// CoCo1 Text
+			({COCO,VID_CONT[3],CHAR_LATCH_0[7],CHAR_LATCH_0[7]} == 4'b1000)		?	2'b01: 			// 2x HR pixels per text pixel
+//	HR Text
+// 32 / 40
+			({COCO,BP,HRES[2],CRES[0]} == 4'b0001)											?	2'b01:				// 2x HR pixels per text pixel
+// 64 / 80
+			({COCO,BP,HRES[2],CRES[0]} == 4'b0011)											?	2'b00:				//	1x HR pixel  per text pixel
+// XTEXT
+// 32 / 40
+			({COCO,BP,HRES[2],CRES[0]} == 4'b0000)											?	2'b01: 			// 2x HR pixels per text pixel
+// 64 / 80
+			({COCO,BP,HRES[2],CRES[0]} == 4'b0010)											?	2'b00:				//	1x HR pixel  per text pixel
+// SG Modes
+// SG4, SG6, SG8, SG12, SG24
+			({COCO,VID_CONT[3],CHAR_LATCH_0[7]} == 3'b101)								?	2'b11:				// 8x HR pixels per SG pixel
+// SG6
+//			({COCO,VID_CONT[3],VID_CONT[0]} == 3'b101)									?	2'b11:				//	8x HR pixels per SG pixel
+// Lowres graphics
+// 64
+							({COCO,VID_CONT[3:0]} == 5'b11000)								?	2'b11:				// 8x HR pixels per SG pixel
+// 128
+//							({COCO,VID_CONT[3:0]} == 5'b11001)								?	2'b10:				// 4x HR pixels per SG pixel
+//							({COCO,VID_CONT[3:0]} == 5'b11010)								?	2'b10:				// 4x HR pixels per SG pixel
+//							({COCO,VID_CONT[3:0]} == 5'b11011)								?	2'b10:				// 4x HR pixels per SG pixel
+//							({COCO,VID_CONT[3:0]} == 5'b11100)								?	2'b10:				// 4x HR pixels per SG pixel
+//							({COCO,VID_CONT[3:0]} == 5'b11101)								?	2'b10:				// 4x HR pixels per SG pixel
+//							({COCO,VID_CONT[3:0]} == 5'b11110)								?	2'b10:				// 4x HR pixels per SG pixel
+// 256
+							({COCO,VID_CONT[3:0]} == 5'b11111)								?	2'b01:				// 2x HR pixels per SG pixel
+// HR GR
+// 16/20 bytes/line 2 color
+//							({COCO,BP,HRES[2:1],CRES} == 6'b010000)						?	2'b10:				// 4x HR pixels per G pixel
+
+// 16/20 bytes/line 4 color
+							({COCO,BP,HRES[3:1],CRES} == 7'b0100001)						?	2'b11:				// 8x HR pixels per G pixel
+
+// 16/20 bytes/line 16 color, implemented later
+//							({COCO,BP,HRES[2:1],CRES} == 6'b010010)						?	2'b00:				// 16x HR pixels per G pixel, not implemented
+
+// 16/20 bytes/line 256 color, implemented later
+//							({COCO,BP,HRES[2:1],CRES} == 6'b010011)						?	2'b01:				// 32x HR pixels per G pixel, not implemented
+
+// 32/40 bytes/line 2 color
+							({COCO,BP,HRES[3:1],CRES} == 7'b0100100)						?	2'b01:				// 2x HR pixels per G pixel
+
+// 32/40 bytes/line 4 color
+//							({COCO,BP,HRES[2:1],CRES} == 6'b010101)						?	2'b10:				// 4x HR pixels per G pixel
+
+// 32/40 bytes/line 16 color
+							({COCO,BP,HRES[3:1],CRES} == 7'b0100110)						?	2'b11:				// 8x HR pixels per G pixel
+
+// 32/40 bytes/line 256 color
+//							({COCO,BP,HRES[2:1],CRES} == 6'b010111)						?	2'b00:				// 16x HR pixels per G pixel, not implemented
+
+// 64/80 bytes/line 2 color
+							({COCO,BP,HRES[3:1],CRES} == 7'b0101000)						?	2'b00:				// 1x HR pixels per G pixel
+
+// 64/80 bytes/line 4 color
+							({COCO,BP,HRES[3:1],CRES} == 7'b0101001)						?	2'b01:				// 2x HR pixels per G pixel
+
+// 64/80 bytes/line 16 color
+//							({COCO,BP,HRES[2:1],CRES} == 6'b011010)						?	2'b10:				// 4x HR pixels per G pixel
+
+// 64/80 bytes/line 256 color
+							({COCO,BP,HRES[3:1],CRES} == 7'b0101011)						?	2'b11:				// 8x HR pixels per G pixel
+
+// 128/160 bytes/line 2 color
+//							({COCO,BP,HRES[2:1],CRES} == 6'b011100)						?	2'b11:				// 0.5x HR pixels per G pixel, not implemented
+
+// 128/160 bytes/line 4 color
+							({COCO,BP,HRES[3:1],CRES} == 7'b0101101)						?	2'b00:				// 1x HR pixels per G pixel
+
+// 128/160 bytes/line 16 color
+							({COCO,BP,HRES[3:1],CRES} == 7'b0101110)						?	2'b01:				// 2x HR pixels per G pixel
+
+// 128/160 bytes/line 256 color
+//							({COCO,BP,HRES[2:1],CRES} == 6'b011111)						?	2'b10:				// 4x HR pixels per G pixel
+
+// 256/320 bytes/line 16 color
+							({COCO,BP,HRES[3:1],CRES} == 7'b0110010)						?	2'b00:				// 1x HR pixels per G pixel
+
+// 256/320 bytes/line 256 color
+							({COCO,BP,HRES[3:1],CRES} == 7'b0110011)						?	2'b01:				// 2x HR pixels per G pixel
+`ifndef NEW_SRAM
+// 512/640 bytes/line 256 color
+							({COCO,BP,HRES[3:1],CRES} == 7'b0110111)						?	2'b00:				// 1x HR pixels per G pixel
+`endif
+																											2'b10;				// 4x HR pixels per ? pixel, DEFAULT
+
+always @ (negedge PIX_CLK)
+begin
+	if(PIXEL_COUNT[3:0] == 4'b1111)
+	begin
+		case (PIXEL_ORDER)
+		default:	// 2'b10 4x pixels
+		begin
+//						 		 7          6          5          4          3          2          1          0
+			COLOR7[7:0] <=	{PIXEL11[3],PIXEL11[3],PIXEL11[3],PIXEL11[3],PIXEL10[3],PIXEL10[3],PIXEL10[3],PIXEL10[3]};
+			COLOR6[7:0] <=	{PIXEL11[2],PIXEL11[2],PIXEL11[2],PIXEL11[2],PIXEL10[2],PIXEL10[2],PIXEL10[2],PIXEL10[2]};
+			COLOR5[7:0] <=	{PIXEL11[1],PIXEL11[1],PIXEL11[1],PIXEL11[1],PIXEL10[1],PIXEL10[1],PIXEL10[1],PIXEL10[1]};
+			COLOR4[7:0] <=	{PIXEL11[0],PIXEL11[0],PIXEL11[0],PIXEL11[0],PIXEL10[0],PIXEL10[0],PIXEL10[0],PIXEL10[0]};
+			COLOR3[7:0] <=	{ PIXEL1[3], PIXEL1[3], PIXEL1[3], PIXEL1[3], PIXEL0[3], PIXEL0[3], PIXEL0[3], PIXEL0[3]};
+			COLOR2[7:0] <=	{ PIXEL1[2], PIXEL1[2], PIXEL1[2], PIXEL1[2], PIXEL0[2], PIXEL0[2], PIXEL0[2], PIXEL0[2]};
+			COLOR1[7:0] <=	{ PIXEL1[1], PIXEL1[1], PIXEL1[1], PIXEL1[1], PIXEL0[1], PIXEL0[1], PIXEL0[1], PIXEL0[1]};
+			COLOR0[7:0] <=	{ PIXEL1[0], PIXEL1[0], PIXEL1[0], PIXEL1[0], PIXEL0[0], PIXEL0[0], PIXEL0[0], PIXEL0[0]};
+		end
+		2'b00:	// 1x pixels
+		begin
+//						 		 7          6          5          4          3          2          1          0
+			COLOR7[7:0] <=	{PIXEL17[3],PIXEL16[3],PIXEL15[3],PIXEL14[3],PIXEL13[3],PIXEL12[3],PIXEL11[3],PIXEL10[3]};
+			COLOR6[7:0] <=	{PIXEL17[2],PIXEL16[2],PIXEL15[2],PIXEL14[2],PIXEL13[2],PIXEL12[2],PIXEL11[2],PIXEL10[2]};
+			COLOR5[7:0] <=	{PIXEL17[1],PIXEL16[1],PIXEL15[1],PIXEL14[1],PIXEL13[1],PIXEL12[1],PIXEL11[1],PIXEL10[1]};
+			COLOR4[7:0] <=	{PIXEL17[0],PIXEL16[0],PIXEL15[0],PIXEL14[0],PIXEL13[0],PIXEL12[0],PIXEL11[0],PIXEL10[0]};
+			COLOR3[7:0] <=	{PIXEL7[3], PIXEL6[3], PIXEL5[3], PIXEL4[3], PIXEL3[3], PIXEL2[3], PIXEL1[3], PIXEL0[3]};
+			COLOR2[7:0] <=	{PIXEL7[2], PIXEL6[2], PIXEL5[2], PIXEL4[2], PIXEL3[2], PIXEL2[2], PIXEL1[2], PIXEL0[2]};
+			COLOR1[7:0] <=	{PIXEL7[1], PIXEL6[1], PIXEL5[1], PIXEL4[1], PIXEL3[1], PIXEL2[1], PIXEL1[1], PIXEL0[1]};
+			COLOR0[7:0] <=	{PIXEL7[0], PIXEL6[0], PIXEL5[0], PIXEL4[0], PIXEL3[0], PIXEL2[0], PIXEL1[0], PIXEL0[0]};
+		end
+		2'b01:	// 2x pixels
+		begin
+//						 		 7          6          5          4          3          2          1          0
+			COLOR7[7:0] <=	{PIXEL13[3],PIXEL13[3],PIXEL12[3],PIXEL12[3],PIXEL11[3],PIXEL11[3],PIXEL10[3],PIXEL10[3]};
+			COLOR6[7:0] <=	{PIXEL13[2],PIXEL13[2],PIXEL12[2],PIXEL12[2],PIXEL11[2],PIXEL11[2],PIXEL10[2],PIXEL10[2]};
+			COLOR5[7:0] <=	{PIXEL13[1],PIXEL13[1],PIXEL12[1],PIXEL12[1],PIXEL11[1],PIXEL11[1],PIXEL10[1],PIXEL10[1]};
+			COLOR4[7:0] <=	{PIXEL13[0],PIXEL13[0],PIXEL12[0],PIXEL12[0],PIXEL11[0],PIXEL11[0],PIXEL10[0],PIXEL10[0]};
+			COLOR3[7:0] <=	{PIXEL3[3], PIXEL3[3], PIXEL2[3], PIXEL2[3], PIXEL1[3], PIXEL1[3], PIXEL0[3], PIXEL0[3]};
+			COLOR2[7:0] <=	{PIXEL3[2], PIXEL3[2], PIXEL2[2], PIXEL2[2], PIXEL1[2], PIXEL1[2], PIXEL0[2], PIXEL0[2]};
+			COLOR1[7:0] <=	{PIXEL3[1], PIXEL3[1], PIXEL2[1], PIXEL2[1], PIXEL1[1], PIXEL1[1], PIXEL0[1], PIXEL0[1]};
+			COLOR0[7:0] <=	{PIXEL3[0], PIXEL3[0], PIXEL2[0], PIXEL2[0], PIXEL1[0], PIXEL1[0], PIXEL0[0], PIXEL0[0]};
+		end
+		2'b11:	// 8x pixels
+		begin
+//						 			 7          6          5          4          3          2          1          0
+			COLOR7[7:0] <=	{PIXEL10[3],PIXEL10[3],PIXEL10[3],PIXEL10[3],PIXEL10[3],PIXEL10[3],PIXEL10[3],PIXEL10[3]};
+			COLOR6[7:0] <=	{PIXEL10[2],PIXEL10[2],PIXEL10[2],PIXEL10[2],PIXEL10[2],PIXEL10[2],PIXEL10[2],PIXEL10[2]};
+			COLOR5[7:0] <=	{PIXEL10[1],PIXEL10[1],PIXEL10[1],PIXEL10[1],PIXEL10[1],PIXEL10[1],PIXEL10[1],PIXEL10[1]};
+			COLOR4[7:0] <=	{PIXEL10[0],PIXEL10[0],PIXEL10[0],PIXEL10[0],PIXEL10[0],PIXEL10[0],PIXEL10[0],PIXEL10[0]};
+			COLOR3[7:0] <=	{PIXEL0[3], PIXEL0[3], PIXEL0[3], PIXEL0[3], PIXEL0[3], PIXEL0[3], PIXEL0[3], PIXEL0[3]};
+			COLOR2[7:0] <=	{PIXEL0[2], PIXEL0[2], PIXEL0[2], PIXEL0[2], PIXEL0[2], PIXEL0[2], PIXEL0[2], PIXEL0[2]};
+			COLOR1[7:0] <=	{PIXEL0[1], PIXEL0[1], PIXEL0[1], PIXEL0[1], PIXEL0[1], PIXEL0[1], PIXEL0[1], PIXEL0[1]};
+			COLOR0[7:0] <=	{PIXEL0[0], PIXEL0[0], PIXEL0[0], PIXEL0[0], PIXEL0[0], PIXEL0[0], PIXEL0[0], PIXEL0[0]};
+		end
+		endcase
+	end
+	else
+	begin
+		if(PIXEL_COUNT[3:0] == 4'b0001)
+		begin
+		case (PIXEL_ORDER)
+		default:	// 2'b10 4x pixels
+		begin
+//						 			 15         14         13         12         11         10         9          8
+			COLOR7[15:8] <=	{PIXEL13[3],PIXEL13[3],PIXEL13[3],PIXEL13[3],PIXEL12[3],PIXEL12[3],PIXEL12[3],PIXEL12[3]};
+			COLOR6[15:8] <=	{PIXEL13[2],PIXEL13[2],PIXEL13[2],PIXEL13[2],PIXEL12[2],PIXEL12[2],PIXEL12[2],PIXEL12[2]};
+			COLOR5[15:8] <=	{PIXEL13[1],PIXEL13[1],PIXEL13[1],PIXEL13[1],PIXEL12[1],PIXEL12[1],PIXEL12[1],PIXEL12[1]};
+			COLOR4[15:8] <=	{PIXEL13[0],PIXEL13[0],PIXEL13[0],PIXEL13[0],PIXEL12[0],PIXEL12[0],PIXEL12[0],PIXEL12[0]};
+			COLOR3[15:8] <=	{PIXEL3[3], PIXEL3[3], PIXEL3[3], PIXEL3[3], PIXEL2[3], PIXEL2[3], PIXEL2[3], PIXEL2[3]};
+			COLOR2[15:8] <=	{PIXEL3[2], PIXEL3[2], PIXEL3[2], PIXEL3[2], PIXEL2[2], PIXEL2[2], PIXEL2[2], PIXEL2[2]};
+			COLOR1[15:8] <=	{PIXEL3[1], PIXEL3[1], PIXEL3[1], PIXEL3[1], PIXEL2[1], PIXEL2[1], PIXEL2[1], PIXEL2[1]};
+			COLOR0[15:8] <=	{PIXEL3[0], PIXEL3[0], PIXEL3[0], PIXEL3[0], PIXEL2[0], PIXEL2[0], PIXEL2[0], PIXEL2[0]};
+		end
+		2'b00:	// 1x pixels
+		begin
+//						 			 15         14         13         12         11         10         9          8
+			COLOR7[15:8] <=	{PIXEL1F[3],PIXEL1E[3],PIXEL1D[3],PIXEL1C[3],PIXEL1B[3],PIXEL1A[3],PIXEL19[3],PIXEL18[3]};
+			COLOR6[15:8] <=	{PIXEL1F[2],PIXEL1E[2],PIXEL1D[2],PIXEL1C[2],PIXEL1B[2],PIXEL1A[2],PIXEL19[2],PIXEL18[2]};
+			COLOR5[15:8] <=	{PIXEL1F[1],PIXEL1E[1],PIXEL1D[1],PIXEL1C[1],PIXEL1B[1],PIXEL1A[1],PIXEL19[1],PIXEL18[1]};
+			COLOR4[15:8] <=	{PIXEL1F[0],PIXEL1E[0],PIXEL1D[0],PIXEL1C[0],PIXEL1B[0],PIXEL1A[0],PIXEL19[0],PIXEL18[0]};
+			COLOR3[15:8] <=	{PIXELF[3], PIXELE[3], PIXELD[3], PIXELC[3], PIXELB[3], PIXELA[3], PIXEL9[3], PIXEL8[3]};
+			COLOR2[15:8] <=	{PIXELF[2], PIXELE[2], PIXELD[2], PIXELC[2], PIXELB[2], PIXELA[2], PIXEL9[2], PIXEL8[2]};
+			COLOR1[15:8] <=	{PIXELF[1], PIXELE[1], PIXELD[1], PIXELC[1], PIXELB[1], PIXELA[1], PIXEL9[1], PIXEL8[1]};
+			COLOR0[15:8] <=	{PIXELF[0], PIXELE[0], PIXELD[0], PIXELC[0], PIXELB[0], PIXELA[0], PIXEL9[0], PIXEL8[0]};
+		end
+		2'b01:	// 2x pixels
+		begin
+//						 			 15         15         13         12         11         10         9          8
+			COLOR7[15:8] <=	{PIXEL17[3],PIXEL17[3],PIXEL16[3],PIXEL16[3],PIXEL15[3],PIXEL15[3],PIXEL14[3],PIXEL14[3]};
+			COLOR6[15:8] <=	{PIXEL17[2],PIXEL17[2],PIXEL16[2],PIXEL16[2],PIXEL15[2],PIXEL15[2],PIXEL14[2],PIXEL14[2]};
+			COLOR5[15:8] <=	{PIXEL17[1],PIXEL17[1],PIXEL16[1],PIXEL16[1],PIXEL15[1],PIXEL15[1],PIXEL14[1],PIXEL14[1]};
+			COLOR4[15:8] <=	{PIXEL17[0],PIXEL17[0],PIXEL16[0],PIXEL16[0],PIXEL15[0],PIXEL15[0],PIXEL14[0],PIXEL14[0]};
+			COLOR3[15:8] <=	{PIXEL7[3], PIXEL7[3], PIXEL6[3], PIXEL6[3], PIXEL5[3], PIXEL5[3], PIXEL4[3], PIXEL4[3]};
+			COLOR2[15:8] <=	{PIXEL7[2], PIXEL7[2], PIXEL6[2], PIXEL6[2], PIXEL5[2], PIXEL5[2], PIXEL4[2], PIXEL4[2]};
+			COLOR1[15:8] <=	{PIXEL7[1], PIXEL7[1], PIXEL6[1], PIXEL6[1], PIXEL5[1], PIXEL5[1], PIXEL4[1], PIXEL4[1]};
+			COLOR0[15:8] <=	{PIXEL7[0], PIXEL7[0], PIXEL6[0], PIXEL6[0], PIXEL5[0], PIXEL5[0], PIXEL4[0], PIXEL4[0]};
+		end
+		2'b11:	// 8x pixels
+		begin
+//						 			 15         14         13         12
+			COLOR7[15:8] <=	{PIXEL11[3],PIXEL11[3],PIXEL11[3],PIXEL11[3],PIXEL11[3],PIXEL11[3],PIXEL11[3],PIXEL11[3]};
+			COLOR6[15:8] <=	{PIXEL11[2],PIXEL11[2],PIXEL11[2],PIXEL11[2],PIXEL11[2],PIXEL11[2],PIXEL11[2],PIXEL11[2]};
+			COLOR5[15:8] <=	{PIXEL11[1],PIXEL11[1],PIXEL11[1],PIXEL11[1],PIXEL11[1],PIXEL11[1],PIXEL11[1],PIXEL11[1]};
+			COLOR4[15:8] <=	{PIXEL11[0],PIXEL11[0],PIXEL11[0],PIXEL11[0],PIXEL11[0],PIXEL11[0],PIXEL11[0],PIXEL11[0]};
+			COLOR3[15:8] <=	{PIXEL1[3], PIXEL1[3], PIXEL1[3], PIXEL1[3], PIXEL1[3], PIXEL1[3], PIXEL1[3], PIXEL1[3]};
+			COLOR2[15:8] <=	{PIXEL1[2], PIXEL1[2], PIXEL1[2], PIXEL1[2], PIXEL1[2], PIXEL1[2], PIXEL1[2], PIXEL1[2]};
+			COLOR1[15:8] <=	{PIXEL1[1], PIXEL1[1], PIXEL1[1], PIXEL1[1], PIXEL1[1], PIXEL1[1], PIXEL1[1], PIXEL1[1]};
+			COLOR0[15:8] <=	{PIXEL1[0], PIXEL1[0], PIXEL1[0], PIXEL1[0], PIXEL1[0], PIXEL1[0], PIXEL1[0], PIXEL1[0]};
+		end
+		endcase
+	end
+	end
+end
+
+assign BORDER =
+			({COCO,VID_CONT[3]} == 2'b10)								?	9'h100:			//Black
+			({COCO,VID_CONT[3],VID_CONT[0],CSS} == 4'b1111)		?	{5'h00,PALETTEB}:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS} == 4'b1110)		?	{5'h00,PALETTE9}:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS} == 4'b1101)		?	{5'h00,PALETTE4}:
+			({COCO,VID_CONT[3],VID_CONT[0],CSS} == 4'b1100)		?	{5'h00,PALETTE0}:
+																					9'h010;			//BDR_PAL
+
+always @ (negedge PIX_CLK)
+begin
+	COLOR <= CCOLOR;
+end
+
+assign CCOLOR[8] = ({VBLANKING,HBLANKING} == 2'b00)				?	({COCO,BP,CRES} == 4'b0111):			//normal screen area
+		({(VBORDER&HBORDER),(VBLANKING|HBLANKING)} == 2'b11)	?	BORDER[8]:										// Border
+																					1'b1;												// Retrace
+
+assign CCOLOR[7] = ({VBLANKING,HBLANKING} == 2'b00)				?	COLOR7[PIXEL_COUNT[3:0]]:				// Normal screeen area
+		({(VBORDER&HBORDER),(VBLANKING|HBLANKING)} == 2'b11)	?	BORDER[7]:										// Border
+																					1'b0;												// Retrace
+
+assign CCOLOR[6] = ({VBLANKING,HBLANKING} == 2'b00)				?	COLOR6[PIXEL_COUNT[3:0]]:				// Normal screeen area
+		({(VBORDER&HBORDER),(VBLANKING|HBLANKING)} == 2'b11)	?	BORDER[6]:										// Border
+																					1'b0;												// Retrace
+
+assign CCOLOR[5] = ({VBLANKING,HBLANKING} == 2'b00)				?	COLOR5[PIXEL_COUNT[3:0]]:				// Normal screeen area
+		({(VBORDER&HBORDER),(VBLANKING|HBLANKING)} == 2'b11)	?	BORDER[5]:										// Border
+																					1'b0;												// Retrace
+
+assign CCOLOR[4] = ({VBLANKING,HBLANKING} == 2'b00)				?	COLOR4[PIXEL_COUNT[3:0]]:				// Normal screeen area
+		({(VBORDER&HBORDER),(VBLANKING|HBLANKING)} == 2'b11)	?	BORDER[4]:										// Border
+																					1'b0;												// Retrace
+
+assign CCOLOR[3] = ({VBLANKING,HBLANKING} == 2'b00)				?	COLOR3[PIXEL_COUNT[3:0]]:				// Normal screeen area
+		({(VBORDER&HBORDER),(VBLANKING|HBLANKING)} == 2'b11)	?	BORDER[3]:										// Border
+																					1'b0;												// Retrace
+
+assign CCOLOR[2] = ({VBLANKING,HBLANKING} == 2'b00)				?	COLOR2[PIXEL_COUNT[3:0]]:				// Normal screeen area
+		({(VBORDER&HBORDER),(VBLANKING|HBLANKING)} == 2'b11)	?	BORDER[2]:										// Border
+																					1'b0;												// Retrace
+
+assign CCOLOR[1] = ({VBLANKING,HBLANKING} == 2'b00)				?	COLOR1[PIXEL_COUNT[3:0]]:				// Normal screeen area
+		({(VBORDER&HBORDER),(VBLANKING|HBLANKING)} == 2'b11)	?	BORDER[1]:										// Border
+																					1'b0;												// Retrace
+
+assign CCOLOR[0] = ({VBLANKING,HBLANKING} == 2'b00)				?	COLOR0[PIXEL_COUNT[3:0]]:				// Normal screeen area
+		({(VBORDER&HBORDER),(VBLANKING|HBLANKING)} == 2'b11)	?	BORDER[0]:										// Border
+																					1'b0;												// Retrace
+
+/*****************************************************************************
+* Count pixels across each line
+* 32 and 40 character modes use double wide pixels
+******************************************************************************/
+always @ (negedge PIX_CLK)
+begin
+		case(PIXEL_COUNT)
+		10'd013:
+		begin
+			PIXEL_COUNT <= 10'd014;
+			HBORDER <= 1'b1;								//Turn on border for 640 mode
+		end
+		10'd015:				// Turn off horizontal blanking so first character can be displayed
+		begin
+			HBLANKING <= 1'b0;							// Turn off blanking
+			HBORDER <= 1'b1;
+			HSYNC <= 1'b1;									// Not H Sync
+			PIXEL_COUNT  <= 10'd016;					// Next step
+		end
+		10'd527:												// 512 + 16 -1
+		begin
+			HBORDER <= 1'b1;
+			HSYNC <= 1'b1;									// Not H Sync
+			if(MODE_256)									// 512 mode
+			begin
+				HBLANKING <= 1'b1;						// Turn on blanking
+				PIXEL_COUNT  <= 10'd592;				// 528 + 64 = 528 + 128 - 64
+			end
+			else											// 640 mode
+			begin
+				HBLANKING <= 1'b0;					// Leave blanking off
+				PIXEL_COUNT  <= 10'd528;
+			end
+		end
+		10'd655:											// 640 + 16 - 1
+		begin
+			HBLANKING <= 1'b1;						// Blanking on
+			HBORDER <= 1'b1;
+			HSYNC <= 1'b1;								// Not H Sync
+			PIXEL_COUNT  <= 10'd656;
+		end
+		10'd657:											// 648 + 24 - 1
+		begin
+			HBLANKING <= 1'b1;
+			HBORDER <= 1'b0;
+			HSYNC <= 1'b1;
+// added 6 to make total = 794 instead of 800
+			PIXEL_COUNT <= 10'd664;
+		end
+		10'd671:											// 648 + 24 - 1
+		begin
+			HBLANKING <= 1'b1;
+			HBORDER <= 1'b0;
+			HSYNC <= 1'b0;								// Turn on Sync
+			PIXEL_COUNT <= 10'd672;
+		end
+		10'd767:											// 672 + 104 - 1
+		begin
+			HBLANKING <= 1'b1;
+			HSYNC <= 1'b1;								// SYNC OFF
+			if(~MODE_256)									// 640 mode
+				PIXEL_COUNT <= 10'd832;				// skip 64
+			else
+				PIXEL_COUNT <= 10'd768;
+		end
+		10'd799:
+		begin
+			PIXEL_COUNT <= 10'd800;
+			HBORDER <= 1'b1;							//Turn on Border for 256 pixel mode
+		end
+		10'd863:											// 864 - 1
+		begin
+			PIXEL_COUNT <= 10'd000;
+			HSYNC <= 1'b1;
+			SYNC_FLAG <= LINE[0];					// Every other line with the first visable line has sync
+//			~SYNC_FLAG;
+		end
+		default:
+		begin
+			PIXEL_COUNT <= PIXEL_COUNT + 1'b1;
+		end
+		endcase
+//	end
+end
+
+/*****************************************************************************
+* Switches to set different video modes
+******************************************************************************/
+assign MODE_256 = (COCO == 1'b1)					?	1'b1:
+						({COCO, HRES[0]}== 2'b00)	?	1'b1:
+																1'b0;
+
+/*
+00x=one line per row
+010=two lines per row
+011=eight lines per row
+100=nine lines per row
+101=ten lines per row
+110=eleven lines per row
+111=*infinite lines per row
+*/
+assign LINES_ROW	=	({COCO,LPR[2:1]}==3'b000)	?	4'b0000:			// 1
+							({COCO,LPR}==		4'b0010)	?	4'b0001:			// 2
+							({COCO,LPR}==		4'b0011)	?	4'b0111:			// 8
+							({COCO,LPR}==		4'b0100)	?	4'b1000:			// 9
+							({COCO,LPR}==		4'b0101)	?	4'b1001:			// 10
+							({COCO,LPR}==		4'b0110)	?	4'b1010:			// 11
+							({COCO,LPR}==		4'b0111)	?	4'b1111:			// Infinite
+							({COCO, V} == 		4'b1001)	?	4'b0010:			// 3
+							({COCO, V} == 		4'b1010)	?	4'b0010:			// 3
+							({COCO, V} == 		4'b1011)	?	4'b0001:			// 2
+							({COCO, V} == 		4'b1100)	?	4'b0001:			// 2
+							({COCO, V} == 		4'b1101)	?	4'b0000:			// 1
+							({COCO, V} ==	 	4'b1110)	?	4'b0000:			// 1
+																	4'b1011;			// 12
+
+assign SIX =	(V!=3'b000)					?	SIX_R:		//SG8, SG12, SG24
+					(VLPR[3:2] == 2'b00) 	?	1'b0:			//0-3	SG4 Mode
+					(VLPR[3:1] == 3'b010) 	?	1'b0:			//4-5	SG4 Mode
+														1'b1;
+
+assign SG6 =	VLPR[3:2];
+
+/*****************************************************************************
+* Calculates the starting address of the row
+******************************************************************************/
+assign SCREEN_OFF =
+// CoCo1 low res graphics (64 pixels / 2 bytes)
+({COCO,V[0]} == 2'b11)											?	ROW_ADD + 10'd16:
+//HR Text
+({HVEN,COCO} == 2'b10)											?  ROW_ADD + 10'd256:
+({HVEN,COCO,BP,HRES[3:2],CRES[0],HRES[0]}==6'b0000000)?	ROW_ADD + 10'd32:
+({HVEN,COCO,BP,HRES[3:2],CRES[0],HRES[0]}==6'b0000001)?	ROW_ADD + 10'd40:
+({HVEN,COCO,BP,HRES[3:2],CRES[0],HRES[0]}==6'b0000010)?	ROW_ADD + 10'd64:
+({HVEN,COCO,BP,HRES[3:2],CRES[0],HRES[0]}==6'b0000011)?	ROW_ADD + 10'd80:
+({HVEN,COCO,BP,HRES[3:2],CRES[0],HRES[0]}==6'b0000100)?	ROW_ADD + 10'd64:
+({HVEN,COCO,BP,HRES[3:2],CRES[0],HRES[0]}==6'b0000101)?	ROW_ADD + 10'd80:
+({HVEN,COCO,BP,HRES[3:2],CRES[0],HRES[0]}==6'b0000110)?	ROW_ADD + 10'd128:
+({HVEN,COCO,BP,HRES[3:2],CRES[0],HRES[0]}==6'b0000111)?	ROW_ADD + 10'd160:
+//No text greater than 80 characters / row
+//({HVEN,COCO,BP,HRES[3:2],CRES[0],HRES[0]}==6'b0001000)?	ROW_ADD + 9'd256:
+//({HVEN,COCO,BP,HRES[3:2],CRES[0],HRES[0]}==6'b0001001)?	ROW_ADD + 9'd320:
+//({HVEN,COCO,BP,HRES[3:2],CRES[0],HRES[0]}==6'b0001010)?	ROW_ADD + 9'd512:
+//({HVEN,COCO,BP,HRES[3:2],CRES[0],HRES[0]}==6'b0001011)?	ROW_ADD + 9'd640:
+//HR Graphics
+						({HVEN,COCO,BP,HRES}==7'b0010000)	?	ROW_ADD + 10'd16:
+						({HVEN,COCO,BP,HRES}==7'b0010001)	?	ROW_ADD + 10'd20:
+						({HVEN,COCO,BP,HRES}==7'b0010010)	?	ROW_ADD + 10'd32:
+						({HVEN,COCO,BP,HRES}==7'b0010011)	?	ROW_ADD + 10'd40:
+						({HVEN,COCO,BP,HRES}==7'b0010100)	?	ROW_ADD + 10'd64:
+						({HVEN,COCO,BP,HRES}==7'b0010101)	?	ROW_ADD + 10'd80:
+						({HVEN,COCO,BP,HRES}==7'b0010110)	?	ROW_ADD + 10'd128:
+						({HVEN,COCO,BP,HRES}==7'b0010111)	?	ROW_ADD + 10'd160:
+						({HVEN,COCO,BP,HRES}==7'b0011000)	?	ROW_ADD + 10'd256:
+						({HVEN,COCO,BP,HRES}==7'b0011001)	?	ROW_ADD + 10'd320:
+						({HVEN,COCO,BP,HRES}==7'b0011010)	?	ROW_ADD + 10'd512:
+						({HVEN,COCO,BP,HRES}==7'b0011011)	?	ROW_ADD + 10'd640:
+// CoCo1 Text
+																			ROW_ADD + 9'd32;
+
+/*****************************************************************************
+* Keeps track of how many lines are in each row.
+* There are 2X lines per coco line.
+******************************************************************************/
+always @ (negedge HSYNC or posedge VBLANKING)
+begin
+	if(VBLANKING)
+	begin
+		SIX_R <= 1'b0;
+		SG_LINES <= 3'b000;
+		NUM_ROW <= LINES_ROW;
+		UNDERLINE <= 1'b0;
+		COCO1_VLPR <= 4'h0;
+		if(~COCO)
+		begin
+			ROW_ADD <= {SCRN_START_MSB,SCRN_START_LSB,3'h0} + {HOR_OFFSET, 1'b0};
+			if(BP)						// Vertical Fine Scroll not in graphics modes
+			begin
+				VLPR <= 4'h0;
+			end
+			else
+			begin
+				if(LINES_ROW > VERT_FIN_SCRL)
+				begin
+					VLPR <= VERT_FIN_SCRL;
+
+				end
+				else
+				begin
+					VLPR <= LINES_ROW;
+				end
+			end
+		end
+		else
+		begin
+			VLPR <= 4'h0;
+			ROW_ADD <= {SCRN_START_MSB[7:5],VERT,SCRN_START_LSB[5:0],3'h0} + {HOR_OFFSET, 1'b0};
+		end
+	end
+	else
+	begin
+		if(LINE[0] || HLPR)
+		begin
+			if (COCO1_VLPR == 4'HB)
+				COCO1_VLPR <= 4'H0;
+			else
+				COCO1_VLPR <= COCO1_VLPR + 1'b1;
+			case (VLPR)
+			4'h0:																	// Pixel row 1
+			begin
+				if(NUM_ROW == 4'b0000)															// 1 line
+				begin
+					ROW_ADD <= SCREEN_OFF;
+					if(SG_LINES == 3'b101)									// SG24
+					begin
+						SIX_R <= !SIX_R;
+						SG_LINES <= 3'b000;
+					end
+					else
+					begin
+						SG_LINES <= SG_LINES + 1'b1;
+					end
+				end
+				if((NUM_ROW == 4'b0000) || ({BP, LINES_ROW} == 5'b11111))			// 1 or infinite graphics mode
+				begin
+					NUM_ROW <= LINES_ROW;
+					VLPR <= 4'h0;
+				end
+				else
+				begin
+					VLPR <= 4'h1;
+				end
+				if(NUM_ROW == 4'b0001)													// 2 lines per row
+					UNDERLINE <= 1'b1;													// Set underline
+				else
+					UNDERLINE <= 1'b0;
+			end
+			4'h1:																				// Pixel row 2
+			begin
+				UNDERLINE <= 1'b0;
+				if(NUM_ROW == 4'b0001)															// 2 line per row
+				begin
+					NUM_ROW <= LINES_ROW;
+					ROW_ADD <= SCREEN_OFF;
+					VLPR <= 4'h0;
+					if(SG_LINES == 3'b010)									// SG12
+					begin
+						SIX_R <= !SIX_R;
+						SG_LINES <= 3'b000;
+					end
+					else
+					begin
+						SG_LINES <= SG_LINES + 1'b1;
+					end
+				end
+				else
+				begin
+					VLPR <= 4'h2;
+				end
+			end
+			4'h2:																				// Pixel row 3
+			begin
+				UNDERLINE <= 1'b0;
+				if(NUM_ROW == 4'b0010)														// 3 line per row
+				begin
+					NUM_ROW <= LINES_ROW;
+					ROW_ADD <= SCREEN_OFF;
+					VLPR <= 4'h0;
+					if(SG_LINES == 3'b001)									// SG12
+					begin
+						SIX_R <= !SIX_R;
+						SG_LINES <= 3'b000;
+					end
+					else
+					begin
+						SG_LINES <= SG_LINES + 1'b1;
+					end
+				end
+				else
+				begin
+					VLPR <= 4'h3;
+				end
+			end
+			4'h5:									// pixel row 6
+			begin
+				VLPR <= 4'h6;
+			end
+			4'h6:									// Pixel Row 7
+			begin
+				VLPR <= 4'h7;
+				if(NUM_ROW == 4'b0111)			// 8
+					UNDERLINE <= 1'b1;					// Set underline
+				else
+					UNDERLINE <= 1'b0;
+			end
+			4'h7:									// Pixel Row 8
+			begin
+				if(NUM_ROW == 4'b0111)			// 8
+				begin
+					NUM_ROW <= LINES_ROW;
+					ROW_ADD <= SCREEN_OFF;
+					VLPR <= 4'h0;
+				end
+				else
+				begin
+					VLPR <= 4'h8;
+				end
+				if(NUM_ROW == 4'b1000)			// 9
+					UNDERLINE <= 1'b1;					// Set underline
+				else
+					UNDERLINE <= 1'b0;
+			end
+			4'h8:									// Pixel Row 9
+			begin
+				if(NUM_ROW == 4'b1000)			// 9
+				begin
+					NUM_ROW <= LINES_ROW;
+					ROW_ADD <= SCREEN_OFF;
+					VLPR <= 4'h0;
+				end
+				else
+				begin
+					VLPR <= 4'h9;
+				end
+				if(NUM_ROW == 4'b1001)		// 10
+					UNDERLINE <= 1'b1;					// Set underline
+				else
+					UNDERLINE <= 1'b0;
+			end
+			4'h9:									// Pixel Row 10
+			begin
+				if(NUM_ROW == 4'b1001)			// 10
+				begin
+					NUM_ROW <= LINES_ROW;
+					ROW_ADD <= SCREEN_OFF;
+					VLPR <= 4'h0;
+				end
+				else
+				begin
+					VLPR <= 4'hA;
+				end
+				if(NUM_ROW == 4'b1010)			// 11
+					UNDERLINE <= 1'b1;
+				else
+					UNDERLINE <= 1'b0;
+			end
+			4'hA:									// Pixel Row 11
+			begin
+				VLPR <= 4'hB;
+				if(NUM_ROW == 4'b1011)			// 12
+					UNDERLINE <= 1'b1;
+				else
+					UNDERLINE <= 1'b0;
+			end
+			4'hB,									// Pixel Row 12
+			4'hC,
+			4'hD,
+			4'hE,
+			4'hF:
+			begin
+				UNDERLINE <= 1'b0;
+				if(NUM_ROW != 4'b1111)			// Infinite
+				begin
+					ROW_ADD <= SCREEN_OFF;
+					NUM_ROW <= LINES_ROW;
+					VLPR <= 4'h0;
+				end
+			end
+			default:
+			begin
+				VLPR <= VLPR + 1'b1;
+			end
+			endcase
+		end
+	end
+end
+/*			case (VLPR)
+			4'h0:																	// Pixel row 1
+			begin
+				NUM_ROW <= LINES_ROW;
+				LINE_NUM <= 4'h1;
+				SIX <= 1'b0;
+				if(NUM_ROW == 3'b000)															// 1 line
+				begin
+					ROW_ADD <= SCREEN_OFF;
+				end
+				if((NUM_ROW == 3'b000) || ({BP, LINES_ROW} == 4'b1111))			// 1 or infinite graphics mode
+					VLPR <= 4'h0;
+				else
+					if(NUM_ROW == 3'b010)														// 3 lines goto underline
+						VLPR <= 4'hA;
+					else
+						if(NUM_ROW == 3'b001)													// 2 lines goto last line
+						begin
+							VLPR <= 4'hB;
+							UNDERLINE <= 1'b1;													// Set underline
+						end
+						else
+							VLPR <= 5'd1;
+			end
+			4'h5:									//Pixel Row 6
+			begin
+				LINE_NUM <= 4'h6;
+				SIX <= 1'b1;
+				if(NUM_ROW == 3'b011)			// 8
+				begin
+					VLPR <= 4'hA;
+				end
+				else
+				begin
+					VLPR <= 4'h6;
+				end
+			end
+			4'h6:									// Pixel Row 7
+			begin
+				LINE_NUM <= 4'h7;
+				if(NUM_ROW == 3'b100)			// 9
+				begin
+					VLPR <= 4'hA;
+				end
+				else
+				begin
+					VLPR <= 4'h7;
+				end
+			end
+			4'h7:									// Pixel Row 8
+			begin
+				LINE_NUM <= 4'h8;
+				if(NUM_ROW == 3'b101)			// 10
+				begin
+					VLPR <= 4'hA;
+				end
+				else
+				begin
+					VLPR <= 4'h8;
+				end
+			end
+			4'hA:								// Pixel row 11
+			begin
+				LINE_NUM <= LINE_NUM + 1'b1;
+				UNDERLINE <= 1'b1;
+				VLPR <= 4'hB;
+			end
+			4'hB:										// Pixel row 12
+			begin
+				UNDERLINE <= 1'b0;
+				SIX <= 1'b0;
+				if(LINES_ROW != 3'b111)				// Infininte
+				begin
+					LINE_NUM <= 4'h0;
+					ROW_ADD <= SCREEN_OFF;
+					VLPR <= 4'h0;
+				end
+			end
+			default:
+			begin
+				LINE_NUM <= LINE_NUM + 1'b1;
+				VLPR <= VLPR + 1'b1;
+			end
+			endcase
+*/
+/*****************************************************************************
+* Keeps track of the real line number, and controls VSYNC and VBlanking.
+* Does not keep track of the lines per row
+*
+*	LPR				Lines
+*
+*	00 or COCO =1	192
+*	01					200
+*	10					210
+*	11					225	(25*9)
+******************************************************************************/
+always @ (negedge HSYNC or negedge RESET_N)
+begin
+	if(~RESET_N)
+	begin
+		LINE <= 10'd00;
+		VBLANKING <= 1'b0;
+		VSYNC <= 1'b1;
+	end
+	else
+	case (LINE)
+// Video
+	10'd383:								// End of 192 line display
+	begin
+		LINE <= 10'd384;
+		if((LPF == 2'b00) || (COCO == 1'b1))		// Standard COCO modes are always 192
+		begin
+			VBLANKING <= 1'b1;
+		end
+	end
+	10'd399:								// End of 200 line display
+	begin
+		LINE <= 10'd400;
+		if(LPF == 2'b01)
+		begin
+			VBLANKING <= 1'b1;
+		end
+	end
+	10'd419:								// End of 210 line display
+	begin
+		LINE <= 10'd420;
+		if(LPF == 2'b10)
+		begin
+			VBLANKING <= 1'b1;
+		end
+	end
+	10'd449:								// End of 225 line display
+	begin
+		LINE <= 10'd450;
+		VBLANKING <= 1'b1;
+	end
+//End of Border, start of porch
+	10'd467:
+	begin
+		VBORDER <= 1'b0;
+		LINE <= 10'd468;
+	end
+// End of Porch, start of sync
+// Start of Sync is a 1 to 0
+	10'd473:
+	begin
+		LINE <= 10'd474;
+		VSYNC <= 1'b0;					// Sync on
+	end
+// End of sync, start of blanking and porch
+	10'd479:
+	begin
+		LINE <= 10'd480;
+		VSYNC <= 1'b1;					// Sync off
+	end
+// End of porch, start of border
+	10'd505:
+	begin
+		LINE <= 10'd506;
+		VBORDER <= 1'b1;
+	end
+// End of border, start of video, restart state machine
+	10'd523:                   // -1
+	begin
+		LINE <= 10'd000;
+		VBLANKING <= 1'b0;
+	end
+	default:
+	begin
+		LINE <= LINE + 1'b1;
+	end
+	endcase
+end
+endmodule

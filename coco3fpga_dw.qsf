@@ -1,0 +1,375 @@
+# -------------------------------------------------------------------------- #
+#
+# Copyright (C) 1991-2010 Altera Corporation
+# Your use of Altera Corporation's design tools, logic functions 
+# and other software and tools, and its AMPP partner logic 
+# functions, and any output files from any of the foregoing 
+# (including device programming or simulation files), and any 
+# associated documentation or information are expressly subject 
+# to the terms and conditions of the Altera Program License 
+# Subscription Agreement, Altera MegaCore Function License 
+# Agreement, or other applicable license agreement, including, 
+# without limitation, that your use is for the sole purpose of 
+# programming logic devices manufactured by Altera and sold by 
+# Altera or its authorized distributors.  Please refer to the 
+# applicable agreement for further details.
+#
+# -------------------------------------------------------------------------- #
+#
+# Quartus II
+# Version 9.1 Build 350 03/24/2010 Service Pack 2 SJ Web Edition
+# Date created = 08:24:31  April 14, 2010
+#
+# -------------------------------------------------------------------------- #
+#
+# Notes:
+#
+# 1) The default values for assignments are stored in the file:
+#		coco3fpga_dw_assignment_defaults.qdf
+#    If this file doesn't exist, see file:
+#		assignment_defaults.qdf
+#
+# 2) Altera recommends that you do not modify this file. This
+#    file is updated automatically by the Quartus II software
+#    and any changes you make may be lost or overwritten.
+#
+# -------------------------------------------------------------------------- #
+
+
+set_global_assignment -name FAMILY "Cyclone II"
+set_global_assignment -name DEVICE EP2C20F484C7
+set_global_assignment -name TOP_LEVEL_ENTITY coco3fpga_dw
+set_global_assignment -name ORIGINAL_QUARTUS_VERSION "9.1 SP2"
+set_global_assignment -name PROJECT_CREATION_TIME_DATE "08:24:31  APRIL 14, 2010"
+set_global_assignment -name LAST_QUARTUS_VERSION "13.0 SP1"
+set_global_assignment -name USE_GENERATED_PHYSICAL_CONSTRAINTS OFF -section_id eda_blast_fpga
+set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
+set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
+set_global_assignment -name LL_ROOT_REGION ON -section_id "Root Region"
+set_global_assignment -name LL_MEMBER_STATE LOCKED -section_id "Root Region"
+set_global_assignment -name MIN_CORE_JUNCTION_TEMP 0
+set_global_assignment -name MAX_CORE_JUNCTION_TEMP 85
+set_location_assignment PIN_L22 -to SWITCH[0]
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SWITCH[0]
+set_location_assignment PIN_L21 -to SWITCH[1]
+set_location_assignment PIN_M22 -to SWITCH[2]
+set_location_assignment PIN_V12 -to SWITCH[3]
+set_location_assignment PIN_W12 -to SWITCH[4]
+set_location_assignment PIN_U12 -to SWITCH[5]
+set_location_assignment PIN_U11 -to SWITCH[6]
+set_location_assignment PIN_M2 -to SWITCH[7]
+set_location_assignment PIN_M1 -to SWITCH[8]
+set_location_assignment PIN_L2 -to SWITCH[9]
+set_location_assignment PIN_J2 -to SEGMENT0_N[0]
+set_location_assignment PIN_J1 -to SEGMENT0_N[1]
+set_location_assignment PIN_H2 -to SEGMENT0_N[2]
+set_location_assignment PIN_H1 -to SEGMENT0_N[3]
+set_location_assignment PIN_F2 -to SEGMENT0_N[4]
+set_location_assignment PIN_F1 -to SEGMENT0_N[5]
+set_location_assignment PIN_E2 -to SEGMENT0_N[6]
+set_location_assignment PIN_E1 -to SEGMENT1_N[0]
+set_location_assignment PIN_H6 -to SEGMENT1_N[1]
+set_location_assignment PIN_H5 -to SEGMENT1_N[2]
+set_location_assignment PIN_H4 -to SEGMENT1_N[3]
+set_location_assignment PIN_G3 -to SEGMENT1_N[4]
+set_location_assignment PIN_D2 -to SEGMENT1_N[5]
+set_location_assignment PIN_D1 -to SEGMENT1_N[6]
+set_location_assignment PIN_G5 -to SEGMENT2_N[0]
+set_location_assignment PIN_G6 -to SEGMENT2_N[1]
+set_location_assignment PIN_C2 -to SEGMENT2_N[2]
+set_location_assignment PIN_C1 -to SEGMENT2_N[3]
+set_location_assignment PIN_E3 -to SEGMENT2_N[4]
+set_location_assignment PIN_E4 -to SEGMENT2_N[5]
+set_location_assignment PIN_D3 -to SEGMENT2_N[6]
+set_location_assignment PIN_F4 -to SEGMENT3_N[0]
+set_location_assignment PIN_D5 -to SEGMENT3_N[1]
+set_location_assignment PIN_D6 -to SEGMENT3_N[2]
+set_location_assignment PIN_J4 -to SEGMENT3_N[3]
+set_location_assignment PIN_L8 -to SEGMENT3_N[4]
+set_location_assignment PIN_F3 -to SEGMENT3_N[5]
+set_location_assignment PIN_D4 -to SEGMENT3_N[6]
+set_location_assignment PIN_L1 -to CLK50MHZ
+set_location_assignment PIN_A9 -to BLUE0
+set_location_assignment PIN_D11 -to BLUE1
+set_location_assignment PIN_A10 -to BLUE2
+set_location_assignment PIN_B10 -to BLUE3
+set_location_assignment PIN_D9 -to RED0
+set_location_assignment PIN_C9 -to RED1
+set_location_assignment PIN_A7 -to RED2
+set_location_assignment PIN_B7 -to RED3
+set_location_assignment PIN_B8 -to GREEN0
+set_location_assignment PIN_C10 -to GREEN1
+set_location_assignment PIN_B9 -to GREEN2
+set_location_assignment PIN_A8 -to GREEN3
+set_location_assignment PIN_A11 -to H_SYNC
+set_location_assignment PIN_B11 -to V_SYNC
+set_location_assignment PIN_H15 -to ps2_clk
+set_location_assignment PIN_J14 -to ps2_data
+set_location_assignment PIN_AB5 -to RAM0_CS_N
+set_location_assignment PIN_Y7 -to RAM0_BE0_N
+set_location_assignment PIN_W7 -to RAM0_BE1_N
+set_location_assignment PIN_AB20 -to FLASH_ADDRESS[0]
+set_location_assignment PIN_AA14 -to FLASH_ADDRESS[1]
+set_location_assignment PIN_Y16 -to FLASH_ADDRESS[2]
+set_location_assignment PIN_R15 -to FLASH_ADDRESS[3]
+set_location_assignment PIN_T15 -to FLASH_ADDRESS[4]
+set_location_assignment PIN_U15 -to FLASH_ADDRESS[5]
+set_location_assignment PIN_V15 -to FLASH_ADDRESS[6]
+set_location_assignment PIN_W15 -to FLASH_ADDRESS[7]
+set_location_assignment PIN_R14 -to FLASH_ADDRESS[8]
+set_location_assignment PIN_Y13 -to FLASH_ADDRESS[9]
+set_location_assignment PIN_R12 -to FLASH_ADDRESS[10]
+set_location_assignment PIN_T12 -to FLASH_ADDRESS[11]
+set_location_assignment PIN_AB14 -to FLASH_ADDRESS[12]
+set_location_assignment PIN_AA13 -to FLASH_ADDRESS[13]
+set_location_assignment PIN_AB13 -to FLASH_ADDRESS[14]
+set_location_assignment PIN_AA12 -to FLASH_ADDRESS[15]
+set_location_assignment PIN_AB12 -to FLASH_ADDRESS[16]
+set_location_assignment PIN_AA20 -to FLASH_ADDRESS[17]
+set_location_assignment PIN_U14 -to FLASH_ADDRESS[18]
+set_location_assignment PIN_V14 -to FLASH_ADDRESS[19]
+set_location_assignment PIN_U13 -to FLASH_ADDRESS[20]
+set_location_assignment PIN_R13 -to FLASH_ADDRESS[21]
+set_location_assignment PIN_AB16 -to FLASH_DATA[0]
+set_location_assignment PIN_AA16 -to FLASH_DATA[1]
+set_location_assignment PIN_AB17 -to FLASH_DATA[2]
+set_location_assignment PIN_AA17 -to FLASH_DATA[3]
+set_location_assignment PIN_AB18 -to FLASH_DATA[4]
+set_location_assignment PIN_AA18 -to FLASH_DATA[5]
+set_location_assignment PIN_AB19 -to FLASH_DATA[6]
+set_location_assignment PIN_AA19 -to FLASH_DATA[7]
+set_location_assignment PIN_AA15 -to FLASH_OE_N
+set_location_assignment PIN_W14 -to FLASH_RESET_N
+set_location_assignment PIN_Y14 -to FLASH_WE_N
+set_location_assignment PIN_R22 -to BUTTON_N[0]
+set_location_assignment PIN_R21 -to BUTTON_N[1]
+set_location_assignment PIN_T22 -to BUTTON_N[2]
+set_location_assignment PIN_T21 -to BUTTON_N[3]
+set_global_assignment -name STRATIX_CONFIGURATION_DEVICE EPCS4
+set_global_assignment -name RESERVE_ASDO_AFTER_CONFIGURATION "AS INPUT TRI-STATED"
+set_location_assignment PIN_AB15 -to FLASH_CE_N
+set_location_assignment PIN_R20 -to LEDR[0]
+set_location_assignment PIN_R19 -to LEDR[1]
+set_location_assignment PIN_U19 -to LEDR[2]
+set_location_assignment PIN_Y19 -to LEDR[3]
+set_location_assignment PIN_T18 -to LEDR[4]
+set_location_assignment PIN_V19 -to LEDR[5]
+set_location_assignment PIN_Y18 -to LEDR[6]
+set_location_assignment PIN_U18 -to LEDR[7]
+set_location_assignment PIN_R18 -to LEDR[8]
+set_location_assignment PIN_R17 -to LEDR[9]
+set_location_assignment PIN_U22 -to LEDG[0]
+set_location_assignment PIN_U21 -to LEDG[1]
+set_location_assignment PIN_V22 -to LEDG[2]
+set_location_assignment PIN_V21 -to LEDG[3]
+set_location_assignment PIN_W22 -to LEDG[4]
+set_location_assignment PIN_W21 -to LEDG[5]
+set_location_assignment PIN_Y22 -to LEDG[6]
+set_location_assignment PIN_Y21 -to LEDG[7]
+set_global_assignment -name EDA_SIMULATION_TOOL "ModelSim-Altera (Verilog)"
+set_global_assignment -name EDA_TIME_SCALE "1 ps" -section_id eda_simulation
+set_global_assignment -name EDA_OUTPUT_DATA_FORMAT "VERILOG HDL" -section_id eda_simulation
+set_global_assignment -name SIMULATION_MODE FUNCTIONAL
+set_global_assignment -name POWER_PRESET_COOLING_SOLUTION "23 MM HEAT SINK WITH 200 LFPM AIRFLOW"
+set_global_assignment -name POWER_BOARD_THERMAL_MODEL "NONE (CONSERVATIVE)"
+set_global_assignment -name CYCLONEII_OPTIMIZATION_TECHNIQUE SPEED
+set_global_assignment -name OPTIMIZE_POWER_DURING_SYNTHESIS OFF
+set_global_assignment -name HDL_MESSAGE_LEVEL LEVEL3
+set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
+set_global_assignment -name STRATIX_DEVICE_IO_STANDARD "3.3-V LVTTL"
+set_location_assignment PIN_B6 -to AUD_ADCDAT
+set_location_assignment PIN_A6 -to AUD_ADCLRCK
+set_location_assignment PIN_A4 -to AUD_BCLK
+set_location_assignment PIN_B5 -to AUD_DACDAT
+set_location_assignment PIN_A5 -to AUD_DACLRCK
+set_location_assignment PIN_B4 -to AUD_XCK
+set_location_assignment PIN_A12 -to CLK24MHZ
+set_location_assignment PIN_B3 -to I2C_DAT
+set_location_assignment PIN_A3 -to I2C_SCL
+set_location_assignment PIN_AA3 -to RAM0_ADDRESS[0]
+set_location_assignment PIN_AB3 -to RAM0_ADDRESS[1]
+set_location_assignment PIN_AA4 -to RAM0_ADDRESS[2]
+set_location_assignment PIN_AB4 -to RAM0_ADDRESS[3]
+set_location_assignment PIN_AA5 -to RAM0_ADDRESS[4]
+set_location_assignment PIN_AB10 -to RAM0_ADDRESS[5]
+set_location_assignment PIN_AA11 -to RAM0_ADDRESS[6]
+set_location_assignment PIN_AB11 -to RAM0_ADDRESS[7]
+set_location_assignment PIN_V11 -to RAM0_ADDRESS[8]
+set_location_assignment PIN_W11 -to RAM0_ADDRESS[9]
+set_location_assignment PIN_R11 -to RAM0_ADDRESS[10]
+set_location_assignment PIN_T11 -to RAM0_ADDRESS[11]
+set_location_assignment PIN_Y10 -to RAM0_ADDRESS[12]
+set_location_assignment PIN_U10 -to RAM0_ADDRESS[13]
+set_location_assignment PIN_R10 -to RAM0_ADDRESS[14]
+set_location_assignment PIN_T7 -to RAM0_ADDRESS[15]
+set_location_assignment PIN_Y6 -to RAM0_ADDRESS[16]
+set_location_assignment PIN_Y5 -to RAM0_ADDRESS[17]
+set_location_assignment PIN_AA6 -to RAM0_DATA[0]
+set_location_assignment PIN_AB6 -to RAM0_DATA[1]
+set_location_assignment PIN_AA7 -to RAM0_DATA[2]
+set_location_assignment PIN_AB7 -to RAM0_DATA[3]
+set_location_assignment PIN_AA8 -to RAM0_DATA[4]
+set_location_assignment PIN_AB8 -to RAM0_DATA[5]
+set_location_assignment PIN_AA9 -to RAM0_DATA[6]
+set_location_assignment PIN_AB9 -to RAM0_DATA[7]
+set_location_assignment PIN_Y9 -to RAM0_DATA[8]
+set_location_assignment PIN_W9 -to RAM0_DATA[9]
+set_location_assignment PIN_V9 -to RAM0_DATA[10]
+set_location_assignment PIN_U9 -to RAM0_DATA[11]
+set_location_assignment PIN_R9 -to RAM0_DATA[12]
+set_location_assignment PIN_W8 -to RAM0_DATA[13]
+set_location_assignment PIN_V8 -to RAM0_DATA[14]
+set_location_assignment PIN_U8 -to RAM0_DATA[15]
+set_location_assignment PIN_T8 -to RAM0_OE_N
+set_location_assignment PIN_AA10 -to RAM0_RW_N
+set_location_assignment PIN_F15 -to RAM1_ADDRESS[12]
+set_location_assignment PIN_A13 -to RAM1_DATA[12]
+set_location_assignment PIN_B13 -to RAM1_DATA[13]
+set_location_assignment PIN_A14 -to RAM1_DATA[14]
+set_location_assignment PIN_B14 -to RAM1_DATA[15]
+set_location_assignment PIN_A15 -to RAM1_BE0_N
+set_location_assignment PIN_B15 -to RAM1_BE1_N
+set_location_assignment PIN_A16 -to RAM1_ADDRESS[8]
+set_location_assignment PIN_B16 -to RAM1_ADDRESS[7]
+set_location_assignment PIN_A17 -to RAM1_ADDRESS[6]
+set_location_assignment PIN_B17 -to RAM1_ADDRESS[5]
+set_location_assignment PIN_A18 -to RAM1_DATA[3]
+set_location_assignment PIN_B18 -to RAM1_DATA[2]
+set_location_assignment PIN_A19 -to RAM1_DATA[1]
+set_location_assignment PIN_B19 -to RAM1_DATA[0]
+set_location_assignment PIN_A20 -to RAM1_CS_N
+set_location_assignment PIN_C21 -to RAM1_ADDRESS[3]
+set_location_assignment PIN_C22 -to RAM1_ADDRESS[0]
+set_location_assignment PIN_D21 -to RAM1_ADDRESS[2]
+set_location_assignment PIN_D22 -to RAM1_ADDRESS[4]
+set_location_assignment PIN_E22 -to RAM1_ADDRESS[1]
+set_location_assignment PIN_J21 -to PADDLE_MCLK
+set_location_assignment PIN_J18 -to P_SWITCH[0]
+set_location_assignment PIN_K20 -to P_SWITCH[1]
+set_location_assignment PIN_L19 -to P_SWITCH[2]
+set_location_assignment PIN_L18 -to P_SWITCH[3]
+set_location_assignment PIN_K21 -to PADDLE_CLK[0]
+set_location_assignment PIN_K22 -to PADDLE_CLK[1]
+set_location_assignment PIN_J19 -to PADDLE_CLK[2]
+set_location_assignment PIN_J20 -to PADDLE_CLK[3]
+set_location_assignment PIN_P17 -to ms_data
+set_location_assignment PIN_P18 -to ms_clk
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to P_SWITCH[0]
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to P_SWITCH[1]
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to P_SWITCH[2]
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to P_SWITCH[3]
+set_global_assignment -name PHYSICAL_SYNTHESIS_EFFORT EXTRA
+set_global_assignment -name SYNTH_TIMING_DRIVEN_SYNTHESIS ON
+set_location_assignment PIN_W20 -to MISO
+set_location_assignment PIN_Y20 -to MOSI
+set_location_assignment PIN_V20 -to SPI_CLK
+set_global_assignment -name CYCLONEII_RESERVE_NCEO_AFTER_CONFIGURATION "USE AS REGULAR IO"
+set_location_assignment PIN_U20 -to SPI_SS_N
+set_global_assignment -name INCREMENTAL_VECTOR_INPUT_SOURCE coco3fpga_dw.vwf
+set_global_assignment -name SEARCH_PATH PS2_Key/ -tag from_archive
+set_global_assignment -name SEARCH_PATH SDCard/ -tag from_archive
+set_global_assignment -name SEARCH_PATH UART_6551/ -tag from_archive
+set_global_assignment -name SEARCH_PATH UART_6850/ -tag from_archive
+set_location_assignment PIN_D12 -to CLK27MHZ
+set_location_assignment PIN_E12 -to CLK27MHZ_2
+set_location_assignment PIN_F14 -to DE1RXD
+set_location_assignment PIN_G12 -to DE1TXD
+set_location_assignment PIN_N21 -to OPTTXD
+set_location_assignment PIN_N15 -to OPTRXD
+set_instance_assignment -name CYCLONEII_TERMINATION "SERIES 25 OHMS" -to RAM0_ADDRESS[17]
+set_instance_assignment -name CYCLONEII_TERMINATION "SERIES 25 OHMS" -to RAM0_ADDRESS[16]
+set_instance_assignment -name CYCLONEII_TERMINATION "SERIES 25 OHMS" -to RAM0_ADDRESS[15]
+set_instance_assignment -name CYCLONEII_TERMINATION "SERIES 25 OHMS" -to RAM0_ADDRESS[14]
+set_instance_assignment -name CYCLONEII_TERMINATION "SERIES 25 OHMS" -to RAM0_ADDRESS[13]
+set_instance_assignment -name CYCLONEII_TERMINATION "SERIES 25 OHMS" -to RAM0_ADDRESS[12]
+set_instance_assignment -name CYCLONEII_TERMINATION "SERIES 25 OHMS" -to RAM0_ADDRESS[1]
+set_instance_assignment -name CYCLONEII_TERMINATION "SERIES 25 OHMS" -to RAM0_ADDRESS[0]
+set_instance_assignment -name CYCLONEII_TERMINATION "SERIES 25 OHMS" -to RAM0_ADDRESS[2]
+set_instance_assignment -name CYCLONEII_TERMINATION "SERIES 25 OHMS" -to RAM0_ADDRESS[3]
+set_instance_assignment -name CYCLONEII_TERMINATION "SERIES 25 OHMS" -to RAM0_ADDRESS[4]
+set_instance_assignment -name CYCLONEII_TERMINATION "SERIES 25 OHMS" -to RAM0_ADDRESS[5]
+set_instance_assignment -name CYCLONEII_TERMINATION "SERIES 25 OHMS" -to RAM0_ADDRESS[11]
+set_instance_assignment -name CYCLONEII_TERMINATION "SERIES 25 OHMS" -to RAM0_ADDRESS[10]
+set_instance_assignment -name CYCLONEII_TERMINATION "SERIES 25 OHMS" -to RAM0_ADDRESS[9]
+set_instance_assignment -name CYCLONEII_TERMINATION "SERIES 25 OHMS" -to RAM0_ADDRESS[7]
+set_instance_assignment -name CYCLONEII_TERMINATION "SERIES 25 OHMS" -to RAM0_ADDRESS[8]
+set_instance_assignment -name CYCLONEII_TERMINATION "SERIES 25 OHMS" -to RAM0_ADDRESS[6]
+set_instance_assignment -name CYCLONEII_TERMINATION "SERIES 25 OHMS" -to RAM0_RW_N
+set_instance_assignment -name CYCLONEII_TERMINATION "SERIES 25 OHMS" -to RAM0_BE0_N
+set_instance_assignment -name CYCLONEII_TERMINATION "SERIES 25 OHMS" -to RAM0_BE1_N
+set_instance_assignment -name CYCLONEII_TERMINATION "SERIES 25 OHMS" -to RAM0_DATA[0]
+set_instance_assignment -name CYCLONEII_TERMINATION "SERIES 25 OHMS" -to RAM0_DATA[1]
+set_instance_assignment -name CYCLONEII_TERMINATION "SERIES 25 OHMS" -to RAM0_DATA[2]
+set_instance_assignment -name CYCLONEII_TERMINATION "SERIES 25 OHMS" -to RAM0_DATA[3]
+set_instance_assignment -name CYCLONEII_TERMINATION "SERIES 25 OHMS" -to RAM0_DATA[4]
+set_instance_assignment -name CYCLONEII_TERMINATION "SERIES 25 OHMS" -to RAM0_DATA[5]
+set_instance_assignment -name CYCLONEII_TERMINATION "SERIES 25 OHMS" -to RAM0_DATA[6]
+set_instance_assignment -name CYCLONEII_TERMINATION "SERIES 25 OHMS" -to RAM0_DATA[7]
+set_instance_assignment -name CYCLONEII_TERMINATION "SERIES 25 OHMS" -to RAM0_DATA[8]
+set_instance_assignment -name CYCLONEII_TERMINATION "SERIES 25 OHMS" -to RAM0_DATA[9]
+set_instance_assignment -name CYCLONEII_TERMINATION "SERIES 25 OHMS" -to RAM0_DATA[10]
+set_instance_assignment -name CYCLONEII_TERMINATION "SERIES 25 OHMS" -to RAM0_DATA[11]
+set_instance_assignment -name CYCLONEII_TERMINATION "SERIES 25 OHMS" -to RAM0_DATA[12]
+set_instance_assignment -name CYCLONEII_TERMINATION "SERIES 25 OHMS" -to RAM0_DATA[13]
+set_instance_assignment -name CYCLONEII_TERMINATION "SERIES 25 OHMS" -to RAM0_DATA[14]
+set_instance_assignment -name CYCLONEII_TERMINATION "SERIES 25 OHMS" -to RAM0_DATA[15]
+set_global_assignment -name VHDL_FILE ../../CPU09/cpu09l_128.vhd
+set_global_assignment -name VERILOG_FILE FFF0.v
+set_global_assignment -name VERILOG_FILE ../../SPI/SDCard.v
+set_global_assignment -name VERILOG_FILE ../../PS2_Key/ps2_keyboard.v
+set_global_assignment -name VERILOG_FILE cocokey.v
+set_global_assignment -name VERILOG_FILE ../../UART_6551/uart_6551.v
+set_global_assignment -name VERILOG_FILE ../../UART_6551/6551tx.v
+set_global_assignment -name VERILOG_FILE ../../UART_6551/6551rx.v
+set_global_assignment -name VERILOG_FILE ../../UART_6850/uart_6850.v
+set_global_assignment -name VERILOG_FILE ../../UART_6850/6850TX.v
+set_global_assignment -name VERILOG_FILE ../../UART_6850/6850RX.v
+set_global_assignment -name VERILOG_FILE coco3vid.v
+set_global_assignment -name VHDL_FILE ../../T65/T65_Pack.vhd
+set_global_assignment -name VHDL_FILE ../../T65/T65_MCode.vhd
+set_global_assignment -name VHDL_FILE ../../T65/T65_ALU.vhd
+set_global_assignment -name VHDL_FILE ../../T65/T65.vhd
+set_global_assignment -name VERILOG_FILE coco3fpga_dw.v
+set_global_assignment -name MIF_FILE disk_c0.mif
+set_global_assignment -name QIP_FILE disk_c0.qip
+set_global_assignment -name QIP_FILE disk_c8.qip
+set_global_assignment -name QIP_FILE coco3gen.qip
+set_global_assignment -name MIF_FILE coco3gen.mif
+set_global_assignment -name QIP_FILE disk_d0.qip
+set_global_assignment -name QIP_FILE disk_d8.qip
+set_global_assignment -name VECTOR_WAVEFORM_FILE coco3fpga_dw.vwf
+set_global_assignment -name QIP_FILE disk02.qip
+set_global_assignment -name QIP_FILE buffer_dp.qip
+set_global_assignment -name MIF_FILE buffer_dp.mif
+set_global_assignment -name QIP_FILE FIFO_READ.qip
+set_global_assignment -name QIP_FILE FIFO_WRITE.qip
+set_global_assignment -name VERILOG_FILE i2c.v
+set_global_assignment -name MIF_FILE disk_02.mif
+set_global_assignment -name QIP_FILE disk02_1.qip
+set_global_assignment -name MIF_FILE DISK_02.mif
+set_global_assignment -name QIP_FILE Video_DAC.qip
+set_global_assignment -name QIP_FILE PH2_CLK.qip
+set_global_assignment -name QIP_FILE uartclk.qip
+set_global_assignment -name SDC_FILE CoCo3FPGA.sdc
+set_location_assignment PIN_D20 -to RAM1_ADDRESS[17]
+set_location_assignment PIN_D19 -to RAM1_ADDRESS[16]
+set_location_assignment PIN_C20 -to RAM1_ADDRESS[15]
+set_location_assignment PIN_E14 -to RAM1_ADDRESS[14]
+set_location_assignment PIN_G16 -to RAM1_ADDRESS[13]
+set_location_assignment PIN_F13 -to RAM1_ADDRESS[11]
+set_location_assignment PIN_F12 -to RAM1_ADDRESS[10]
+set_location_assignment PIN_E15 -to RAM1_ADDRESS[9]
+set_location_assignment PIN_H13 -to RAM1_DATA[11]
+set_location_assignment PIN_H12 -to RAM1_DATA[10]
+set_location_assignment PIN_G15 -to RAM1_DATA[9]
+set_location_assignment PIN_H14 -to RAM1_DATA[8]
+set_location_assignment PIN_D16 -to RAM1_DATA[7]
+set_location_assignment PIN_D15 -to RAM1_DATA[6]
+set_location_assignment PIN_D14 -to RAM1_DATA[5]
+set_location_assignment PIN_C14 -to RAM1_DATA[4]
+set_location_assignment PIN_C17 -to RAM1_RW_N
+set_location_assignment PIN_N22 -to TEST_1
+set_location_assignment PIN_H18 -to TEST_2
+set_location_assignment PIN_J15 -to TEST_3
+set_location_assignment PIN_H17 -to TEST_4
+set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
