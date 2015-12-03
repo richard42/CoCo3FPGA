@@ -313,22 +313,22 @@ set_instance_assignment -name CYCLONEII_TERMINATION "SERIES 25 OHMS" -to RAM0_DA
 set_instance_assignment -name CYCLONEII_TERMINATION "SERIES 25 OHMS" -to RAM0_DATA[13]
 set_instance_assignment -name CYCLONEII_TERMINATION "SERIES 25 OHMS" -to RAM0_DATA[14]
 set_instance_assignment -name CYCLONEII_TERMINATION "SERIES 25 OHMS" -to RAM0_DATA[15]
-set_global_assignment -name VHDL_FILE ../../CPU09/cpu09l_128.vhd
+set_global_assignment -name VHDL_FILE cpu09l_128.vhd
 set_global_assignment -name VERILOG_FILE FFF0.v
-set_global_assignment -name VERILOG_FILE ../../SPI/SDCard.v
-set_global_assignment -name VERILOG_FILE ../../PS2_Key/ps2_keyboard.v
+set_global_assignment -name VERILOG_FILE SDCard.v
+set_global_assignment -name VERILOG_FILE ps2_keyboard.v
 set_global_assignment -name VERILOG_FILE cocokey.v
-set_global_assignment -name VERILOG_FILE ../../UART_6551/uart_6551.v
-set_global_assignment -name VERILOG_FILE ../../UART_6551/6551tx.v
-set_global_assignment -name VERILOG_FILE ../../UART_6551/6551rx.v
-set_global_assignment -name VERILOG_FILE ../../UART_6850/uart_6850.v
-set_global_assignment -name VERILOG_FILE ../../UART_6850/6850TX.v
-set_global_assignment -name VERILOG_FILE ../../UART_6850/6850RX.v
+set_global_assignment -name VERILOG_FILE uart_6551.v
+set_global_assignment -name VERILOG_FILE 6551tx.v
+set_global_assignment -name VERILOG_FILE 6551rx.v
+set_global_assignment -name VERILOG_FILE uart_6850.v
+set_global_assignment -name VERILOG_FILE 6850TX.v
+set_global_assignment -name VERILOG_FILE 6850RX.v
 set_global_assignment -name VERILOG_FILE coco3vid.v
-set_global_assignment -name VHDL_FILE ../../T65/T65_Pack.vhd
-set_global_assignment -name VHDL_FILE ../../T65/T65_MCode.vhd
-set_global_assignment -name VHDL_FILE ../../T65/T65_ALU.vhd
-set_global_assignment -name VHDL_FILE ../../T65/T65.vhd
+set_global_assignment -name VHDL_FILE T65_Pack.vhd
+set_global_assignment -name VHDL_FILE T65_MCode.vhd
+set_global_assignment -name VHDL_FILE T65_ALU.vhd
+set_global_assignment -name VHDL_FILE T65.vhd
 set_global_assignment -name VERILOG_FILE coco3fpga_dw.v
 set_global_assignment -name MIF_FILE disk_c0.mif
 set_global_assignment -name QIP_FILE disk_c0.qip
