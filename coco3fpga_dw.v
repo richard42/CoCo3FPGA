@@ -79,7 +79,7 @@
 //`define SD_DEBUG
 
 // No Debug
-//`define NO_DEBUG
+`define NO_DEBUG
 
 module coco3fpga_dw(
 // Input Clocks
