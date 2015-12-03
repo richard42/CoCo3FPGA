@@ -88,6 +88,7 @@ HRES,
 CRES,
 HVEN,
 HOR_OFFSET,
+SCRN_START_HSB,		// 2 extra bits for 2MB screen start
 SCRN_START_MSB,
 SCRN_START_LSB,
 BLINK,
@@ -108,8 +109,10 @@ output				HBLANKING;
 reg					HBLANKING;
 output				VBLANKING;
 reg					VBLANKING;
-output	[17:0]	RAM_ADDRESS;
-reg		[17:0]	RAM_ADDRESS;
+//output	[17:0]	RAM_ADDRESS;	// 512Kb
+//reg		[17:0]	RAM_ADDRESS;
+output	[19:0]	RAM_ADDRESS;	// 2MB
+reg		[19:0]	RAM_ADDRESS;
 input		[15:0]	RAM_DATA;
 input					COCO;
 input		[2:0]		V;
@@ -125,6 +128,7 @@ input		[3:0]		HRES;
 input		[1:0]		CRES;
 input					HVEN;
 input		[6:0]		HOR_OFFSET;
+input		[1:0]		SCRN_START_HSB;	// extra 2 bits for 2MB
 input		[7:0]		SCRN_START_MSB;
 input		[7:0]		SCRN_START_LSB;
 input					BLINK;
@@ -153,7 +157,7 @@ reg					UNDERLINE;
 wire					MODE_256;
 
 reg		[10:0]	ROM_ADDRESS;
-wire		[17:0]	RAM_ADDRESS_X;
+wire		[19:0]	RAM_ADDRESS_X;		// 17:0 512kb
 wire		[7:0]		ROM_DATA1;
 wire		[3:0]		LINES_ROW;
 reg		[3:0]		NUM_ROW;
@@ -202,9 +206,9 @@ reg		[15:0]	COLOR4;
 reg		[15:0]	COLOR5;
 reg		[15:0]	COLOR6;
 reg		[15:0]	COLOR7;
-reg		[18:0]	ROW_ADD;
+reg		[20:0]	ROW_ADD;		// 18:0 for 512kb
 wire		[8:0]		ROW_OFFSET;
-wire		[18:0]	SCREEN_OFF;
+wire		[20:0]	SCREEN_OFF;	// 18:0 for 512kb
 reg					VBORDER;
 reg					HBORDER;
 wire		[8:0]		BORDER;
@@ -238,7 +242,7 @@ COCO3GEN coco3gen(
 /*****************************************************************************
 * Read RAM
 ******************************************************************************/
-assign RAM_ADDRESS_X = ROW_ADD[18:1] + ROW_OFFSET;
+assign RAM_ADDRESS_X = {ROW_ADD[20:1] + ROW_OFFSET};
 
 assign ROW_OFFSET =																			//9 bits of two byte reads = 1024 max bytes
 // CoCo1 low res graphics (64 pixels / 2 bytes)
@@ -2020,7 +2024,7 @@ begin
 		COCO1_VLPR <= 4'h0;
 		if(~COCO)
 		begin
-			ROW_ADD <= {SCRN_START_MSB,SCRN_START_LSB,3'h0} + {HOR_OFFSET, 1'b0};
+			ROW_ADD <= {SCRN_START_HSB,SCRN_START_MSB,SCRN_START_LSB,3'h0} + {HOR_OFFSET, 1'b0};
 			if(BP)						// Vertical Fine Scroll not in graphics modes
 			begin
 				VLPR <= 4'h0;
@@ -2041,7 +2045,7 @@ begin
 		else
 		begin
 			VLPR <= 4'h0;
-			ROW_ADD <= {SCRN_START_MSB[7:5],VERT,SCRN_START_LSB[5:0],3'h0} + {HOR_OFFSET, 1'b0};
+			ROW_ADD <= {SCRN_START_HSB,SCRN_START_MSB[7:5],VERT,SCRN_START_LSB[5:0],3'h0} + {HOR_OFFSET, 1'b0};
 		end
 	end
 	else

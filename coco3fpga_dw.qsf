@@ -157,7 +157,6 @@ set_location_assignment PIN_V19 -to LEDR[5]
 set_location_assignment PIN_Y18 -to LEDR[6]
 set_location_assignment PIN_U18 -to LEDR[7]
 set_location_assignment PIN_R18 -to LEDR[8]
-set_location_assignment PIN_R17 -to LEDR[9]
 set_location_assignment PIN_U22 -to LEDG[0]
 set_location_assignment PIN_U21 -to LEDG[1]
 set_location_assignment PIN_V22 -to LEDG[2]
@@ -204,6 +203,7 @@ set_location_assignment PIN_R10 -to RAM0_ADDRESS[14]
 set_location_assignment PIN_T7 -to RAM0_ADDRESS[15]
 set_location_assignment PIN_Y6 -to RAM0_ADDRESS[16]
 set_location_assignment PIN_Y5 -to RAM0_ADDRESS[17]
+set_location_assignment PIN_R17 -to RAM0_ADDRESS[18]
 set_location_assignment PIN_AA6 -to RAM0_DATA[0]
 set_location_assignment PIN_AB6 -to RAM0_DATA[1]
 set_location_assignment PIN_AA7 -to RAM0_DATA[2]
@@ -272,6 +272,7 @@ set_location_assignment PIN_F14 -to DE1RXD
 set_location_assignment PIN_G12 -to DE1TXD
 set_location_assignment PIN_N21 -to OPTTXD
 set_location_assignment PIN_N15 -to OPTRXD
+set_instance_assignment -name CYCLONEII_TERMINATION "SERIES 25 OHMS" -to RAM0_ADDRESS[18]
 set_instance_assignment -name CYCLONEII_TERMINATION "SERIES 25 OHMS" -to RAM0_ADDRESS[17]
 set_instance_assignment -name CYCLONEII_TERMINATION "SERIES 25 OHMS" -to RAM0_ADDRESS[16]
 set_instance_assignment -name CYCLONEII_TERMINATION "SERIES 25 OHMS" -to RAM0_ADDRESS[15]

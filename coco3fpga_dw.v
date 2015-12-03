@@ -63,7 +63,6 @@
 // gary_L_becker@yahoo.com
 ////////////////////////////////////////////////////////////////////////////////
 
-
 // RS232 PAK Hardware included
 `define RS232PAK
 // New vs Old SRAM
@@ -179,8 +178,10 @@ input				CLK27MHZ;
 input				CLK27MHZ_2;
 output			CLK3_57MHZ;
 // DE1 RAM Common
-output [17:0]	RAM0_ADDRESS;
-reg	 [17:0]	RAM0_ADDRESS;
+//output [17:0]	RAM0_ADDRESS;	// 512kb SRAM
+//reg	 [17:0]	RAM0_ADDRESS;
+output [19:0]	RAM0_ADDRESS;		// 2MB SRAM.  Bit 19 unconnected on DE1, gives 1MB
+reg	 [19:0]	RAM0_ADDRESS;
 output			RAM0_RW_N;
 reg				RAM0_RW_N;
 // DE1 RAM bank 0
@@ -282,7 +283,8 @@ reg		[3:0]		DIGIT_N;
 
 // LEDs
 output	[7:0]		LEDG;
-output	[9:0]		LEDR;
+//output	[9:0]		LEDR;
+output	[8:0]		LEDR;			// LEDR9 = A18 of 1MB SRAM 
 
 // CoCo Perpherial
 output				PADDLE_MCLK;
@@ -343,7 +345,7 @@ reg					CPU_RESET;
 wire					RESET;
 wire					RESET_P;
 wire		[15:0]	ADDRESS;
-wire		[5:0]		BLOCK_ADDRESS;
+wire		[7:0]		BLOCK_ADDRESS;		// 5:0 for 512kb
 wire					RW_N;
 wire		[7:0]		DATA_IN;
 wire		[7:0]		DATA_OUT;
@@ -391,6 +393,7 @@ reg		[1:0]		LPF;
 reg		[3:0]		HRES;
 reg		[1:0]		CRES;
 reg		[3:0]		VERT_FIN_SCRL;
+reg		[1:0]		SCRN_START_HSB;	// 2 extra bits for 2MB
 reg		[7:0]		SCRN_START_MSB;
 reg		[7:0]		SCRN_START_LSB;
 reg		[6:0]		HOR_OFFSET;
@@ -411,7 +414,7 @@ reg					CD_INT;
 reg					CD_POL;
 reg					CAS_MTR;
 reg					SOUND_EN;
-wire		[17:0]	VIDEO_ADDRESS;
+wire		[19:0]	VIDEO_ADDRESS;		// 2MB   17:0 for 512kb
 wire					ROM_RW;
 wire					FLASH_CE_S;
 
@@ -427,22 +430,22 @@ reg		[1:0]		MPI_SCS;				// IO select
 reg		[1:0]		MPI_CTS;				// ROM select
 reg		[1:0]		W_PROT;
 reg					SBS;
-reg		[5:0]		SAM00;
-reg		[5:0]		SAM01;
-reg		[5:0]		SAM02;
-reg		[5:0]		SAM03;
-reg		[5:0]		SAM04;
-reg		[5:0]		SAM05;
-reg		[5:0]		SAM06;
-reg		[5:0]		SAM07;
-reg		[5:0]		SAM10;
-reg		[5:0]		SAM11;
-reg		[5:0]		SAM12;
-reg		[5:0]		SAM13;
-reg		[5:0]		SAM14;
-reg		[5:0]		SAM15;
-reg		[5:0]		SAM16;
-reg		[5:0]		SAM17;
+reg		[7:0]		SAM00;	// 2MB    5:0 for 512kb   
+reg		[7:0]		SAM01;
+reg		[7:0]		SAM02;
+reg		[7:0]		SAM03;
+reg		[7:0]		SAM04;
+reg		[7:0]		SAM05;
+reg		[7:0]		SAM06;
+reg		[7:0]		SAM07;
+reg		[7:0]		SAM10;
+reg		[7:0]		SAM11;
+reg		[7:0]		SAM12;
+reg		[7:0]		SAM13;
+reg		[7:0]		SAM14;
+reg		[7:0]		SAM15;
+reg		[7:0]		SAM16;
+reg		[7:0]		SAM17;
 wire		[55:0]	KEY;
 wire					SHIFT_OVERRIDE;
 wire					SHIFT;
@@ -701,8 +704,8 @@ wire					SYNC;
 wire					VP_N;
 reg					ODD_LINE;
 wire					SPI_HALT;
-reg	[18:0]		GART_WRITE;
-reg	[18:0]		GART_READ;
+reg	[20:0]		GART_WRITE;		// 2MB   18:0 for 512kb
+reg	[20:0]		GART_READ;
 reg	[1:0]			GART_INC;
 
 `ifdef FLPY_DEBUG
@@ -711,18 +714,10 @@ assign LEDG = TRACE;														// Floppy Trace
 
 `ifdef SD_DEBUG
 assign LEDG = SPI_T;
-			case (VS_INT_SM)
-			2'b00:
-			begin
-				if(~V_SYNC ^ VSYNC_POL)		// 1 = int
-				begin
-					VS_INT <= 1'b0;
-					V_SYNC_IRQ_N <= !VSYNC_INT;
-					VS_INT_SM <= 2'b01;
 `endif														// SD Trace
 
 `ifdef NO_DEBUG
-//assign LEDG = {VS_INT_SM,(~V_SYNC ^ VSYNC_POL),~V_SYNC, VSYNC_POL, !VSYNC_INT, VS_INT, V_SYNC_IRQ_N };
+//assign LEDG = {COCO1, V, VDG_CONTROL};
 assign LEDG[0]= (RAM0_CS & RAM0_BE0);
 assign LEDG[1]= (RAM0_CS & RAM0_BE1);
 assign LEDG[2]= FLASH_CE_S;
@@ -742,7 +737,7 @@ assign LEDR[5] = ~UART50_RXD;
 assign LEDR[6] = !RESET_N;
 assign LEDR[7] = !BUTTON_N[2] & (BUTTON_N[1] | SWITCH[6]);		// SD Card Write Protected when SD Card Inserted
 assign LEDR[8] = !BUTTON_N[2];											// SD Card inserted
-assign LEDR[9] = !act_led_n;
+//assign LEDR[9] = !act_led_n;	A18 of 1MB SRAM
 
 `ifdef BUSA
 assign TEST_1 = MOSI;
@@ -855,7 +850,7 @@ assign	BLOCK_ADDRESS =	({MMU_EN, MMU_TR, ADDRESS[15:13]} ==  5'b10000)					?	SAM
 									({ROM_SEL, MMU_EN, MMU_TR, ADDRESS[15:10]} == 9'b011111110)	?	SAM17:		//011 1111 10X		F800-FBFF
 									({ROM_SEL, MMU_EN, MMU_TR, ADDRESS[15:9]} == 10'b0111111110)?	SAM17:		//011 1111 110X	FC00-FDFF
 							({VEC_PAG_RAM, MMU_EN, MMU_TR, ADDRESS[15:8]} == 11'b01111111110)	?	SAM17:		//011 1111 1110 X	FE00-FEFF Vector page as RAM
-																														{3'b111,ADDRESS[15:13]};
+																														{5'b11111,ADDRESS[15:13]};
 //CS and OE hardcoded low for WRITE CYCLE #3 in EDBLL datasheet
 // Same for both SRAM chips
 assign RAM0_CS_N = 1'b0;																															// Actual RAM CS is always enabled
@@ -1100,10 +1095,10 @@ assign	DATA_IN =				(RAM0_CS & RAM0_BE0)		?	RAM0_DATA[7:0]:
 ({ADDRESS[15:5], ADDRESS[1:0]} == 16'b1111111100110)	?	DATA_REG4:
 // FF23, FF27, FF2B, FF2F, FF33, FF37, FF3B, FF3F
 ({ADDRESS[15:5], ADDRESS[1:0]} == 16'b1111111100111)	?	{~CART1_INT, 3'b011, SOUND_EN, DDR4, CART_POL, CART_INT}:
-									(ADDRESS == 16'hFF70)		?	{5'h00, GART_WRITE[18:16]}:
+									(ADDRESS == 16'hFF70)		?	{3'h00, GART_WRITE[20:16]}:		// 2MB
 									(ADDRESS == 16'hFF71)		?	{       GART_WRITE[15:8]}:
 									(ADDRESS == 16'hFF72)		?	{       GART_WRITE[7:0]}:
-									(ADDRESS == 16'hFF74)		?	{5'h00, GART_READ[18:16]}:
+									(ADDRESS == 16'hFF74)		?	{3'h00, GART_READ[20:16]}:
 									(ADDRESS == 16'hFF75)		?	{       GART_READ[15:8]}:
 									(ADDRESS == 16'hFF76)		?	{       GART_READ[7:0]}:
 									(ADDRESS == 16'hFF76)		?	{6'b000000, GART_INC[1:0]}:
@@ -1127,6 +1122,7 @@ assign	DATA_IN =				(RAM0_CS & RAM0_BE0)		?	RAM0_DATA[7:0]:
 									(ADDRESS == 16'hFF98)		?	{GRMODE, HRES[3], DESCEN, MONO, 1'b0, LPR}:
 									(ADDRESS == 16'hFF99)		?	{HLPR, LPF, HRES[2:0], CRES}:
 									(ADDRESS == 16'hFF9A)		?	{2'b00, PALETTE[16][5:0]}:
+									(ADDRESS == 16'hFF9B)		?	{6'b00, SCRN_START_HSB}:	// 2 extra bits for 2MB. Real hardware can't read back!!
 									(ADDRESS == 16'hFF9C)		?	{4'h0,VERT_FIN_SCRL}:
 									(ADDRESS == 16'hFF9D)		?	SCRN_START_MSB:
 									(ADDRESS == 16'hFF9E)		?	SCRN_START_LSB:
@@ -1399,13 +1395,13 @@ begin
 			begin
 				if(!RW_N)
 				begin
-					RAM0_ADDRESS <= GART_WRITE[18:1];
+					RAM0_ADDRESS <= GART_WRITE[20:1];
 					RAM0_BE0_N <=  GART_WRITE[0];
 					RAM0_BE1_N <= ~GART_WRITE[0];
 				end
 				else
 				begin
-					RAM0_ADDRESS <= GART_READ[18:1];
+					RAM0_ADDRESS <= GART_READ[20:1];
 					RAM0_BE0_N <=  GART_READ[0];
 					RAM0_BE1_N <= ~GART_READ[0];
 				end
@@ -1551,11 +1547,11 @@ begin
 			begin
 				if(!RW_N)
 				begin
-					RAM0_ADDRESS <= GART_WRITE[18:1];
+					RAM0_ADDRESS <= GART_WRITE[20:1];
 				end
 				else
 				begin
-					RAM0_ADDRESS <= GART_READ[18:1];
+					RAM0_ADDRESS <= GART_READ[20:1];
 				end
 			end
 			else
@@ -1575,11 +1571,11 @@ begin
 			begin
 				if(!RW_N)
 				begin
-					RAM0_ADDRESS <= GART_WRITE[18:1];
+					RAM0_ADDRESS <= GART_WRITE[20:1];
 				end
 				else
 				begin
-					RAM0_ADDRESS <= GART_READ[18:1];
+					RAM0_ADDRESS <= GART_READ[20:1];
 				end
 			end
 			else
@@ -1599,11 +1595,11 @@ begin
 			begin
 				if(!RW_N)
 				begin
-					RAM0_ADDRESS <= GART_WRITE[18:1];
+					RAM0_ADDRESS <= GART_WRITE[20:1];
 				end
 				else
 				begin
-					RAM0_ADDRESS <= GART_READ[18:1];
+					RAM0_ADDRESS <= GART_READ[20:1];
 				end
 			end
 			else
@@ -2585,9 +2581,9 @@ begin
 // FF7D
 		ORCH_RIGHT_EXT <= 8'b10000000;
 // FF70-FF72
-		GART_WRITE <= 19'h00000;
+		GART_WRITE <= 21'h00000;		// 19' for 512kb
 // FF74-FF76
-		GART_READ <= 19'h00000;
+		GART_READ <= 21'h00000;			// 19' for 512kb
 // FF77
 		GART_INC <= 2'b1;
 // FF7F
@@ -2636,6 +2632,8 @@ begin
 		CRES <= 2'b00;
 // FF9A
 //		BDR_PAL <= 12'h000;
+// FF9B
+		SCRN_START_HSB <= 2'h00;	// extra 2 bits for 2MB screen start
 // FF9C
 		VERT_FIN_SCRL <= 4'h0;
 // FF9D
@@ -2646,37 +2644,37 @@ begin
 		HVEN <= 1'b0;
 		HOR_OFFSET <= 7'h00;
 // FFA0
-		SAM00 <= 6'h00;
+		SAM00 <= 8'h00;	// 2MB   6'00 for 512kb
 // FFA1
-		SAM01 <= 6'h00;
+		SAM01 <= 8'h00;
 // FFA2
-		SAM02 <= 6'h00;
+		SAM02 <= 8'h00;
 // FFA3
-		SAM03 <= 6'h00;
+		SAM03 <= 8'h00;
 // FFA4
-		SAM04 <= 6'h00;
+		SAM04 <= 8'h00;
 // FFA5
-		SAM05 <= 6'h00;
+		SAM05 <= 8'h00;
 // FFA6
-		SAM06 <= 6'h00;
+		SAM06 <= 8'h00;
 // FFA7
-		SAM07 <= 6'h00;
+		SAM07 <= 8'h00;
 // FFA8
-		SAM10 <= 6'h00;
+		SAM10 <= 8'h00;
 // FFA9
-		SAM11 <= 6'h00;
+		SAM11 <= 8'h00;
 // FFAA
-		SAM12 <= 6'h00;
+		SAM12 <= 8'h00;
 // FFAB
-		SAM13 <= 6'h00;
+		SAM13 <= 8'h00;
 // FFAC
-		SAM14 <= 6'h00;
+		SAM14 <= 8'h00;
 // FFAD
-		SAM15 <= 6'h00;
+		SAM15 <= 8'h00;
 // FFAE
-		SAM16 <= 6'h00;
+		SAM16 <= 8'h00;
 // FFAF
-		SAM17 <= 6'h00;
+		SAM17 <= 8'h00;
 // FFB0
 		PALETTE[0] <= 12'h0000;
 // FFB1
@@ -3231,7 +3229,7 @@ begin
 			end
 			16'hFF70:
 			begin
-				GART_WRITE[18:16] <= DATA_OUT[2:0];
+				GART_WRITE[20:16] <= DATA_OUT[4:0];	//2MB    512Kb: GART_WRITE[18:16] <= DATA_OUT[2:0];
 			end
 			16'hFF71:
 			begin
@@ -3248,7 +3246,7 @@ begin
 			end
 			16'hFF74:
 			begin
-				GART_READ[18:16] <= DATA_OUT[2:0];
+				GART_READ[20:16] <= DATA_OUT[4:0];	//2MB     512:GART_READ[18:16] <= DATA_OUT[2:0];
 			end
 			16'hFF75:
 			begin
@@ -3346,6 +3344,10 @@ begin
 					PALETTE[16][5:0] <= DATA_OUT[5:0];
 				end
 			end
+			16'hFF9B:
+			begin
+				SCRN_START_HSB <= DATA_OUT[1:0];	// extra 2 bits for 2MB screen start
+			end
 			16'hFF9C:
 			begin
 				VERT_FIN_SCRL <= DATA_OUT[3:0];
@@ -3365,67 +3367,67 @@ begin
 			end
 			16'hFFA0:
 			begin
-				SAM00 <= DATA_OUT[5:0];
+				SAM00 <= DATA_OUT[7:0];
 			end
 			16'hFFA1:
 			begin
-				SAM01 <= DATA_OUT[5:0];
+				SAM01 <= DATA_OUT[7:0];
 			end
 			16'hFFA2:
 			begin
-				SAM02 <= DATA_OUT[5:0];
+				SAM02 <= DATA_OUT[7:0];
 			end
 			16'hFFA3:
 			begin
-				SAM03 <= DATA_OUT[5:0];
+				SAM03 <= DATA_OUT[7:0];
 			end
 			16'hFFA4:
 			begin
-				SAM04 <= DATA_OUT[5:0];
+				SAM04 <= DATA_OUT[7:0];
 			end
 			16'hFFA5:
 			begin
-				SAM05 <= DATA_OUT[5:0];
+				SAM05 <= DATA_OUT[7:0];
 			end
 			16'hFFA6:
 			begin
-				SAM06 <= DATA_OUT[5:0];
+				SAM06 <= DATA_OUT[7:0];
 			end
 			16'hFFA7:
 			begin
-				SAM07 <= DATA_OUT[5:0];
+				SAM07 <= DATA_OUT[7:0];
 			end
 			16'hFFA8:
 			begin
-				SAM10 <= DATA_OUT[5:0];
+				SAM10 <= DATA_OUT[7:0];
 			end
 			16'hFFA9:
 			begin
-				SAM11 <= DATA_OUT[5:0];
+				SAM11 <= DATA_OUT[7:0];
 			end
 			16'hFFAA:
 			begin
-				SAM12 <= DATA_OUT[5:0];
+				SAM12 <= DATA_OUT[7:0];
 			end
 			16'hFFAB:
 			begin
-				SAM13 <= DATA_OUT[5:0];
+				SAM13 <= DATA_OUT[7:0];
 			end
 			16'hFFAC:
 			begin
-				SAM14 <= DATA_OUT[5:0];
+				SAM14 <= DATA_OUT[7:0];
 			end
 			16'hFFAD:
 			begin
-				SAM15 <= DATA_OUT[5:0];
+				SAM15 <= DATA_OUT[7:0];
 			end
 			16'hFFAE:
 			begin
-				SAM16 <= DATA_OUT[5:0];
+				SAM16 <= DATA_OUT[7:0];
 			end
 			16'hFFAF:
 			begin
-				SAM17 <= DATA_OUT[5:0];
+				SAM17 <= DATA_OUT[7:0];
 			end
 			16'hFFB0:
 			begin
@@ -3920,6 +3922,7 @@ COCO3VIDEO COCOVID(
 	.VID_CONT(VDG_CONTROL),
 	.HVEN(HVEN),
 	.HOR_OFFSET(HOR_OFFSET),
+	.SCRN_START_HSB(SCRN_START_HSB),		// 2 extra bits for 2MB screen start
 	.SCRN_START_MSB(SCRN_START_MSB),
 	.SCRN_START_LSB(SCRN_START_LSB),
  	.CSS(CSS),
