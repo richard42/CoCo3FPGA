@@ -63,6 +63,7 @@
 // gary_L_becker@yahoo.com
 ////////////////////////////////////////////////////////////////////////////////
 
+
 // RS232 PAK Hardware included
 `define RS232PAK
 // New vs Old SRAM
@@ -710,10 +711,18 @@ assign LEDG = TRACE;														// Floppy Trace
 
 `ifdef SD_DEBUG
 assign LEDG = SPI_T;
+			case (VS_INT_SM)
+			2'b00:
+			begin
+				if(~V_SYNC ^ VSYNC_POL)		// 1 = int
+				begin
+					VS_INT <= 1'b0;
+					V_SYNC_IRQ_N <= !VSYNC_INT;
+					VS_INT_SM <= 2'b01;
 `endif														// SD Trace
 
 `ifdef NO_DEBUG
-//assign LEDG = {COCO1, V, VDG_CONTROL};
+//assign LEDG = {VS_INT_SM,(~V_SYNC ^ VSYNC_POL),~V_SYNC, VSYNC_POL, !VSYNC_INT, VS_INT, V_SYNC_IRQ_N };
 assign LEDG[0]= (RAM0_CS & RAM0_BE0);
 assign LEDG[1]= (RAM0_CS & RAM0_BE1);
 assign LEDG[2]= FLASH_CE_S;
@@ -740,6 +749,10 @@ assign TEST_1 = MOSI;
 assign TEST_2 = MISO;
 assign TEST_3 = SPI_CLK;
 assign TEST_4 = SPI_SS_N;
+`else
+assign TEST_1 = CPU_IRQ;
+assign TEST_2 = CPU_FIRQ;
+
 `endif
 
 //Master clock divider chain
@@ -1798,6 +1811,10 @@ begin
 					H_SYNC_IRQ_N <= 1'b1;
 					HS_INT_SM <= 2'b10;
 				end
+				else
+				begin
+					H_SYNC_IRQ_N <= !HSYNC_INT;
+				end
 			end
 			2'b10:
 			begin
@@ -1856,6 +1873,10 @@ begin
 					VS_INT <= 1'b1;
 					V_SYNC_IRQ_N <= 1'b1;
 					VS_INT_SM <= 2'b10;
+				end
+				else
+				begin
+					V_SYNC_IRQ_N <= !VSYNC_INT;
 				end
 			end
 			2'b10:
