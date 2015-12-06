@@ -3856,36 +3856,47 @@ end
 // Video DAC
 always @ (negedge MCLOCK[0])
 begin
-	if(ODD_LINE)									// Odd lines Black
+	if(COLOR[8])
 	begin
-		{RED3, GREEN3, BLUE3, RED2, GREEN2, BLUE2, RED1, GREEN1, BLUE1, RED0, GREEN0, BLUE0} <= 12'h000;
+		case(COLOR[7:6])
+		2'b00:
+		begin
+			{RED3, GREEN3, BLUE3, RED2, GREEN2, BLUE2, RED1, GREEN1, BLUE1, RED0, GREEN0, BLUE0} <= {3'b000, COLOR[5:0], 3'b000};
+		end
+		2'b01:
+		begin
+			{RED3, RED2, RED1, RED0}			<= {1'b0, COLOR[5], COLOR[2], 1'b0}	+ {2'b00, COLOR[5], COLOR[2]};
+			{GREEN3, GREEN2, GREEN1, GREEN0}	<= {1'b0, COLOR[4], COLOR[1], 1'b0}	+ {2'b00, COLOR[4], COLOR[1]};
+			{BLUE3, BLUE2, BLUE1, BLUE0}		<= {1'b0, COLOR[3], COLOR[0], 1'b0}	+ {2'b00, COLOR[3], COLOR[0]};
+		end
+		2'b10:
+		begin
+			{RED3, GREEN3, BLUE3, RED2, GREEN2, BLUE2, RED1, GREEN1, BLUE1, RED0, GREEN0, BLUE0} <= {COLOR[5:0], 6'b000000};
+		end
+		default:
+		begin
+			{RED3, GREEN3, BLUE3, RED2, GREEN2, BLUE2, RED1, GREEN1, BLUE1, RED0, GREEN0, BLUE0} <= {COLOR[5:0], COLOR[5:0]};
+		end
+		endcase
 	end
 	else
 	begin
-		if(COLOR[8])
-		begin
-			case(COLOR[7:6])
-			2'b00:
-			begin
-				{RED3, GREEN3, BLUE3, RED2, GREEN2, BLUE2, RED1, GREEN1, BLUE1, RED0, GREEN0, BLUE0} <= {3'b000, COLOR[5:0], 3'b000};
-			end
-			2'b01:
-			begin
-				{RED3, RED2, RED1, RED0}			<= {1'b0, COLOR[5], COLOR[2], 1'b0}	+ {2'b00, COLOR[5], COLOR[2]};
-				{GREEN3, GREEN2, GREEN1, GREEN0}	<= {1'b0, COLOR[4], COLOR[1], 1'b0}	+ {2'b00, COLOR[4], COLOR[1]};
-				{BLUE3, BLUE2, BLUE1, BLUE0}		<= {1'b0, COLOR[3], COLOR[0], 1'b0}	+ {2'b00, COLOR[3], COLOR[0]};
-			end
-			2'b10:
-			begin
-				{RED3, GREEN3, BLUE3, RED2, GREEN2, BLUE2, RED1, GREEN1, BLUE1, RED0, GREEN0, BLUE0} <= {COLOR[5:0], 6'b000000};
-			end
-			default:
-			begin
-				{RED3, GREEN3, BLUE3, RED2, GREEN2, BLUE2, RED1, GREEN1, BLUE1, RED0, GREEN0, BLUE0} <= {COLOR[5:0], COLOR[5:0]};
-			end
-			endcase
-		end
-		else
+        	if(ODD_LINE)									// Odd lines 50% darker
+        	begin
+			RED3 <= 1'b0;
+			RED2 <= PALETTE[COLOR[4:0]][11];
+			RED1 <= PALETTE[COLOR[4:0]][8];
+			RED0 <= PALETTE[COLOR[4:0]][5];
+			GREEN3 <= 1'b0;
+			GREEN2 <= PALETTE[COLOR[4:0]][10];
+			GREEN1 <= PALETTE[COLOR[4:0]][7];
+			GREEN0 <= PALETTE[COLOR[4:0]][4];
+			BLUE3 <= 1'b0;
+			BLUE2 <= PALETTE[COLOR[4:0]][9];
+			BLUE1 <= PALETTE[COLOR[4:0]][6];
+			BLUE0 <= PALETTE[COLOR[4:0]][3];
+        	end
+        	else
 		begin
 			RED3 <= PALETTE[COLOR[4:0]][11];
 			RED2 <= PALETTE[COLOR[4:0]][8];
