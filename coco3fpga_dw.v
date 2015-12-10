@@ -850,7 +850,7 @@ assign	BLOCK_ADDRESS =	({MMU_EN, MMU_TR, ADDRESS[15:13]} ==  5'b10000)					?	SAM
 									({ROM_SEL, MMU_EN, MMU_TR, ADDRESS[15:10]} == 9'b011111110)	?	SAM17:		//011 1111 10X		F800-FBFF
 									({ROM_SEL, MMU_EN, MMU_TR, ADDRESS[15:9]} == 10'b0111111110)?	SAM17:		//011 1111 110X	FC00-FDFF
 							({VEC_PAG_RAM, MMU_EN, MMU_TR, ADDRESS[15:8]} == 11'b01111111110)	?	SAM17:		//011 1111 1110 X	FE00-FEFF Vector page as RAM
-																														{5'b11111,ADDRESS[15:13]};
+																														{5'b00111,ADDRESS[15:13]};      // {3'b111,ADDRESS[15:13]} on 512kb
 //CS and OE hardcoded low for WRITE CYCLE #3 in EDBLL datasheet
 // Same for both SRAM chips
 assign RAM0_CS_N = 1'b0;																															// Actual RAM CS is always enabled
